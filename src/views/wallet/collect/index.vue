@@ -4,12 +4,12 @@
       <el-form-item label="地址" prop="address">
         <el-input v-model="queryParams.address" placeholder="请输入地址" clearable @keyup.enter.native="handleQuery" />
       </el-form-item>
-      <el-form-item label="用户ID" prop="userId">
-        <el-input v-model="queryParams.userId" placeholder="请输入用户ID" clearable @keyup.enter.native="handleQuery" />
+      <el-form-item label="交易ID" prop="txid">
+        <el-input v-model="queryParams.txid" placeholder="请输入交易ID" clearable @keyup.enter.native="handleQuery" />
       </el-form-item>
-      <el-form-item label="类型" prop="addressType">
-        <el-select v-model="queryParams.addressType" placeholder="地址类型" clearable>
-          <el-option v-for="dict in dict.type.wallet_address_type" :key="dict.value" :label="dict.label"
+      <el-form-item label="币种类型" prop="currencyType">
+        <el-select v-model="queryParams.currencyType" placeholder="币种类型" clearable>
+          <el-option v-for="dict in dict.type.wallet_currency_type" :key="dict.value" :label="dict.label"
             :value="dict.value" />
         </el-select>
       </el-form-item>
@@ -35,19 +35,33 @@
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="addressList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="collectList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="序号" align="center" prop="id" width="100" />
-      <el-table-column label="地址" align="center" prop="address" :show-overflow-tooltip="true" />
-      <!-- <el-table-column label="公告类型" align="center" prop="addressType" width="100">
+      <el-table-column label="币种类型" align="center" prop="currencyType" width="100">
         <template slot-scope="scope">
-          <dict-tag :options="dict.type.sys_address_type" :value="scope.row.addressType" />
+          <dict-tag :options="dict.type.wallet_currency_type" :value="scope.row.currencyType" />
         </template>
-      </el-table-column> -->
-      <el-table-column label="用户ID" align="center" prop="userId" width="100" />
-      <el-table-column label="状态" align="center" prop="status" width="100">
+      </el-table-column>
+      <el-table-column label="地址" align="center" prop="address">
         <template slot-scope="scope">
-          <dict-tag :options="dict.type.sys_notice_status" :value="scope.row.status" />
+          {{ scope.row.address.slice(0, 6) + '...' + scope.row.address.slice(-6) }}
+          <el-link :underline="false" icon="el-icon-document-copy" v-clipboard:copy="scope.row.address"
+            v-clipboard:success="clipboardSuccess"></el-link>
+        </template>
+      </el-table-column>
+
+      <el-table-column label="数量" align="center" prop="amount" />
+      <el-table-column label="交易ID" align="center" prop="txid" width="150">
+        <template slot-scope="scope">
+          {{ scope.row.txid.slice(0, 6) + '...' + scope.row.txid.slice(-6) }}
+          <el-link :underline="false" icon="el-icon-document-copy" v-clipboard:copy="scope.row.txid"
+            v-clipboard:success="clipboardSuccess"></el-link>
+        </template>
+      </el-table-column>
+      <el-table-column label="状态" align="center" prop="confirmState" width="100">
+        <template slot-scope="scope">
+          <dict-tag :options="dict.type.wallet_collect_status" :value="scope.row.state + scope.row.confirmState" />
         </template>
       </el-table-column>
       <el-table-column label="创建时间" align="center" prop="createTime" width="100">
@@ -78,9 +92,9 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="地址类型" prop="addressType">
-              <el-select v-model="form.addressType" placeholder="请选择地址类型">
-                <el-option v-for="dict in dict.type.wallet_address_type" :key="dict.value" :label="dict.label"
+            <el-form-item label="币种类型" prop="currencyType">
+              <el-select v-model="form.currencyType" placeholder="请选择币种类型">
+                <el-option v-for="dict in dict.type.wallet_currency_type" :key="dict.value" :label="dict.label"
                   :value="dict.value"></el-option>
               </el-select>
             </el-form-item>
@@ -88,7 +102,7 @@
           <el-col :span="24">
             <el-form-item label="状态">
               <el-radio-group v-model="form.status">
-                <el-radio v-for="dict in dict.type.sys_notice_status" :key="dict.value" :label="dict.value">
+                <el-radio v-for="dict in dict.type.wallet_collect_status" :key="dict.value" :label="dict.value">
                   {{ dict.label }}</el-radio>
               </el-radio-group>
             </el-form-item>
@@ -109,11 +123,11 @@
 </template>
 
 <script>
-import { listAddress, getNotice, delNotice, addNotice, updateNotice } from "@/api/wallet/address";
+import { listCollect, getNotice, delNotice, addNotice, updateNotice } from "@/api/wallet/collect";
 
 export default {
-  name: "Notice",
-  dicts: ['sys_notice_status', 'wallet_address_type'],
+  name: "Collect",
+  dicts: ['wallet_collect_status', 'wallet_currency_type'],
   data() {
     return {
       // 遮罩层
@@ -129,7 +143,7 @@ export default {
       // 总条数
       total: 0,
       // 公告表格数据
-      addressList: [],
+      collectList: [],
       // 弹出层标题
       title: "",
       // 是否显示弹出层
@@ -139,16 +153,17 @@ export default {
         pageNum: 1,
         pageSize: 10,
         address: undefined,
-        userId: undefined,
+        txid: undefined,
+        currencyType: undefined,
         status: undefined
       },
       // 表单参数
       form: {},
       // 表单校验
       rules: {
-        addressType: [
-          { required: true, message: "地址类型不能为空", trigger: "change" }
-        ]
+        // currencyType: [
+        //   { required: true, message: "币种类型不能为空", trigger: "change" }
+        // ]
       }
     };
   },
@@ -159,8 +174,8 @@ export default {
     /** 查询公告列表 */
     getList() {
       this.loading = true;
-      listAddress(this.queryParams).then(response => {
-        this.addressList = response.rows;
+      listCollect(this.queryParams).then(response => {
+        this.collectList = response.rows;
         this.total = response.total;
         this.loading = false;
       });
@@ -175,7 +190,7 @@ export default {
       this.form = {
         noticeId: undefined,
         address: undefined,
-        addressType: undefined,
+        currencyType: undefined,
         noticeContent: undefined,
         status: "0"
       };
@@ -213,10 +228,6 @@ export default {
         this.title = "修改公告";
       });
     },
-    /** 复制代码成功 */
-    clipboardSuccess() {
-      this.$modal.msgSuccess("复制成功");
-    },
     /** 提交按钮 */
     submitForm: function () {
       this.$refs["form"].validate(valid => {
@@ -246,6 +257,17 @@ export default {
         this.getList();
         this.$modal.msgSuccess("删除成功");
       }).catch(() => { });
+    },
+    /** 复制代码成功 */
+    clipboardSuccess() {
+      this.$modal.msgSuccess("复制成功");
+    },
+    formatTxid: function (row, column, cellValue) {
+      if (!cellValue) return '';
+      if (cellValue.length > 15) {   // 超过contentLength长度的内容隐藏
+        return cellValue.slice(0, 6) + '...'
+      }
+
     }
   }
 };
