@@ -1,8 +1,8 @@
 {
-  "name": "mei-mei",
+  "name": "nestjs-vue-admin",
   "version": "3.8.0",
-  "description": "槑槑管理系统",
-  "author": "槑槑",
+  "description": "爱芯管理系统",
+  "author": "jilongcui@163.com",
   "license": "MIT",
   "scripts": {
     "dev": "vue-cli-service serve",

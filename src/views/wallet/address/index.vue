@@ -1,15 +1,15 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="公告标题" prop="noticeTitle">
-        <el-input v-model="queryParams.noticeTitle" placeholder="请输入公告标题" clearable @keyup.enter.native="handleQuery" />
+      <el-form-item label="地址" prop="address">
+        <el-input v-model="queryParams.address" placeholder="请输入地址" clearable @keyup.enter.native="handleQuery" />
       </el-form-item>
-      <el-form-item label="操作人员" prop="createBy">
-        <el-input v-model="queryParams.createBy" placeholder="请输入操作人员" clearable @keyup.enter.native="handleQuery" />
+      <el-form-item label="用户ID" prop="userId">
+        <el-input v-model="queryParams.userId" placeholder="请输入用户ID" clearable @keyup.enter.native="handleQuery" />
       </el-form-item>
-      <el-form-item label="类型" prop="noticeType">
-        <el-select v-model="queryParams.noticeType" placeholder="公告类型" clearable>
-          <el-option v-for="dict in dict.type.sys_notice_type" :key="dict.value" :label="dict.label"
+      <el-form-item label="类型" prop="addressType">
+        <el-select v-model="queryParams.addressType" placeholder="地址类型" clearable>
+          <el-option v-for="dict in dict.type.wallet_address_type" :key="dict.value" :label="dict.label"
             :value="dict.value" />
         </el-select>
       </el-form-item>
@@ -73,14 +73,14 @@
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
         <el-row>
           <el-col :span="12">
-            <el-form-item label="公告标题" prop="noticeTitle">
-              <el-input v-model="form.noticeTitle" placeholder="请输入公告标题" />
+            <el-form-item label="地址" prop="address">
+              <el-input v-model="form.address" placeholder="请输入地址" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="公告类型" prop="noticeType">
-              <el-select v-model="form.noticeType" placeholder="请选择公告类型">
-                <el-option v-for="dict in dict.type.sys_notice_type" :key="dict.value" :label="dict.label"
+            <el-form-item label="地址类型" prop="addressType">
+              <el-select v-model="form.addressType" placeholder="请选择地址类型">
+                <el-option v-for="dict in dict.type.wallet_address_type" :key="dict.value" :label="dict.label"
                   :value="dict.value"></el-option>
               </el-select>
             </el-form-item>
@@ -113,7 +113,7 @@ import { listAddress, getNotice, delNotice, addNotice, updateNotice } from "@/ap
 
 export default {
   name: "Notice",
-  dicts: ['sys_notice_status', 'sys_notice_type'],
+  dicts: ['sys_notice_status', 'wallet_address_type'],
   data() {
     return {
       // 遮罩层
@@ -138,19 +138,16 @@ export default {
       queryParams: {
         pageNum: 1,
         pageSize: 10,
-        noticeTitle: undefined,
-        createBy: undefined,
+        address: undefined,
+        userId: undefined,
         status: undefined
       },
       // 表单参数
       form: {},
       // 表单校验
       rules: {
-        noticeTitle: [
-          { required: true, message: "公告标题不能为空", trigger: "blur" }
-        ],
-        noticeType: [
-          { required: true, message: "公告类型不能为空", trigger: "change" }
+        addressType: [
+          { required: true, message: "地址类型不能为空", trigger: "change" }
         ]
       }
     };
@@ -177,8 +174,8 @@ export default {
     reset() {
       this.form = {
         noticeId: undefined,
-        noticeTitle: undefined,
-        noticeType: undefined,
+        address: undefined,
+        addressType: undefined,
         noticeContent: undefined,
         status: "0"
       };
