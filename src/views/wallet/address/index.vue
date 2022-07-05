@@ -7,7 +7,7 @@
       <el-form-item label="用户ID" prop="userId">
         <el-input v-model="queryParams.userId" placeholder="请输入用户ID" clearable @keyup.enter.native="handleQuery" />
       </el-form-item>
-      <el-form-item label="类型" prop="addressType">
+      <el-form-item label="地址类型" prop="addressType">
         <el-select v-model="queryParams.addressType" placeholder="地址类型" clearable>
           <el-option v-for="dict in dict.type.wallet_address_type" :key="dict.value" :label="dict.label"
             :value="dict.value" />
@@ -37,22 +37,23 @@
 
     <el-table v-loading="loading" :data="addressList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="序号" align="center" prop="id" width="100" />
-      <el-table-column label="地址" align="center" prop="address" :show-overflow-tooltip="true" />
+      <el-table-column label="序号" align="center" prop="id" width="60" />
+      <el-table-column label="地址" align="center" prop="address" />
       <!-- <el-table-column label="公告类型" align="center" prop="addressType" width="100">
         <template slot-scope="scope">
           <dict-tag :options="dict.type.sys_address_type" :value="scope.row.addressType" />
         </template>
       </el-table-column> -->
-      <el-table-column label="用户ID" align="center" prop="userId" width="100" />
-      <el-table-column label="状态" align="center" prop="status" width="100">
+      <el-table-column label="用户ID" align="center" prop="userId" width="90" />
+      <el-table-column label="应用ID" align="center" prop="appId" width="90" />
+      <!-- <el-table-column label="状态" align="center" prop="status" width="100">
         <template slot-scope="scope">
           <dict-tag :options="dict.type.sys_notice_status" :value="scope.row.status" />
         </template>
-      </el-table-column>
-      <el-table-column label="创建时间" align="center" prop="createTime" width="100">
+      </el-table-column> -->
+      <el-table-column label="创建时间" align="center" prop="createTime" width="160">
         <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.createTime, '{y}-{m}-{d}') }}</span>
+          <span>{{ parseTime(scope.row.createTime) }}</span>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
@@ -72,30 +73,22 @@
     <el-dialog :title="title" :visible.sync="open" width="780px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
         <el-row>
-          <el-col :span="12">
-            <el-form-item label="地址" prop="address">
-              <el-input v-model="form.address" placeholder="请输入地址" />
+          <el-col :span="8">
+            <el-form-item label="用户ID" prop="userId">
+              <el-input v-model="form.userId" placeholder="请输入地址" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="8">
+            <el-form-item label="应用ID" prop="appId">
+              <el-input v-model="form.appId" placeholder="请输入地址" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
             <el-form-item label="地址类型" prop="addressType">
               <el-select v-model="form.addressType" placeholder="请选择地址类型">
                 <el-option v-for="dict in dict.type.wallet_address_type" :key="dict.value" :label="dict.label"
                   :value="dict.value"></el-option>
               </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="状态">
-              <el-radio-group v-model="form.status">
-                <el-radio v-for="dict in dict.type.sys_notice_status" :key="dict.value" :label="dict.value">
-                  {{ dict.label }}</el-radio>
-              </el-radio-group>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="内容">
-              <editor v-model="form.noticeContent" :min-height="192" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -109,7 +102,7 @@
 </template>
 
 <script>
-import { listAddress, getNotice, delNotice, addNotice, updateNotice } from "@/api/wallet/address";
+import { listAddress, getNotice, delNotice, addAddress, updateNotice } from "@/api/wallet/address";
 
 export default {
   name: "Notice",
@@ -138,17 +131,25 @@ export default {
       queryParams: {
         pageNum: 1,
         pageSize: 10,
+        addressType: 'ETH',
         address: undefined,
         userId: undefined,
         status: undefined
       },
       // 表单参数
-      form: {},
+      form: {
+      },
       // 表单校验
       rules: {
+        userId: [
+          { required: true, message: "用户ID不能为空", trigger: "change" }
+        ],
+        appId: [
+          { required: true, message: "APPID不能为空", trigger: "change" }
+        ],
         addressType: [
           { required: true, message: "地址类型不能为空", trigger: "change" }
-        ]
+        ],
       }
     };
   },
@@ -173,10 +174,10 @@ export default {
     // 表单重置
     reset() {
       this.form = {
-        noticeId: undefined,
+        userId: undefined,
         address: undefined,
         addressType: undefined,
-        noticeContent: undefined,
+        appId: "0",
         status: "0"
       };
       this.resetForm("form");
@@ -228,7 +229,7 @@ export default {
               this.getList();
             });
           } else {
-            addNotice(this.form).then(response => {
+            addAddress(this.form).then(response => {
               this.$modal.msgSuccess("新增成功");
               this.open = false;
               this.getList();

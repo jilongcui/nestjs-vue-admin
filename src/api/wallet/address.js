@@ -18,9 +18,9 @@ export function getNotice(noticeId) {
 }
 
 // 新增公告
-export function addNotice(data) {
+export function addAddress(data) {
   return request({
-    url: '/system/notice',
+    url: '/wallet/address',
     method: 'post',
     data: data
   })

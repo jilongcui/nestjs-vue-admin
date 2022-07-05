@@ -37,24 +37,24 @@
 
     <el-table v-loading="loading" :data="collectList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="序号" align="center" prop="id" width="100" />
+      <el-table-column label="序号" align="center" prop="id" width="50" />
       <el-table-column label="币种类型" align="center" prop="currencyType" width="100">
         <template slot-scope="scope">
           <dict-tag :options="dict.type.wallet_currency_type" :value="scope.row.currencyType" />
         </template>
       </el-table-column>
-      <el-table-column label="地址" align="center" prop="address">
+      <el-table-column label="地址" align="center" prop="address" width="200">
         <template slot-scope="scope">
-          {{ scope.row.address.slice(0, 6) + '...' + scope.row.address.slice(-6) }}
+          {{ scope.row.address.slice(0, 8) + '...' + scope.row.address.slice(-6) }}
           <el-link :underline="false" icon="el-icon-document-copy" v-clipboard:copy="scope.row.address"
             v-clipboard:success="clipboardSuccess"></el-link>
         </template>
       </el-table-column>
 
-      <el-table-column label="数量" align="center" prop="amount" />
-      <el-table-column label="交易ID" align="center" prop="txid" width="150">
+      <el-table-column label="金额" align="center" prop="amount" />
+      <el-table-column label="交易ID" align="center" prop="txid" width="200">
         <template slot-scope="scope">
-          {{ scope.row.txid.slice(0, 6) + '...' + scope.row.txid.slice(-6) }}
+          {{ scope.row.txid.slice(0, 8) + '...' + scope.row.txid.slice(-6) }}
           <el-link :underline="false" icon="el-icon-document-copy" v-clipboard:copy="scope.row.txid"
             v-clipboard:success="clipboardSuccess"></el-link>
         </template>
@@ -64,9 +64,9 @@
           <dict-tag :options="dict.type.wallet_collect_status" :value="scope.row.state + scope.row.confirmState" />
         </template>
       </el-table-column>
-      <el-table-column label="创建时间" align="center" prop="createTime" width="100">
+      <el-table-column label="创建时间" align="center" prop="createTime" width="180">
         <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.createTime, '{y}-{m}-{d}') }}</span>
+          <span>{{ parseTime(scope.row.createTime) }}</span>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
@@ -265,9 +265,8 @@ export default {
     formatTxid: function (row, column, cellValue) {
       if (!cellValue) return '';
       if (cellValue.length > 15) {   // 超过contentLength长度的内容隐藏
-        return cellValue.slice(0, 6) + '...'
+        return cellValue.slice(0, 8) + '...'
       }
-
     }
   }
 };
