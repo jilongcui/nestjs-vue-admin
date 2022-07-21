@@ -161,8 +161,8 @@ export default {
     getList() {
       this.loading = true;
       listAddress(this.queryParams).then(response => {
-        this.addressList = response.rows;
-        this.total = response.total;
+        this.addressList = response.data.rows;
+        this.total = response.data.total;
         this.loading = false;
       });
     },

@@ -175,8 +175,8 @@ export default {
     getList() {
       this.loading = true;
       listCollect(this.queryParams).then(response => {
-        this.collectList = response.rows;
-        this.total = response.total;
+        this.collectList = response.data.rows;
+        this.total = response.data.total;
         this.loading = false;
       });
     },
