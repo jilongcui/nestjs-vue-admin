@@ -71,8 +71,9 @@ export default {
           const list = Array.isArray(val) ? val : this.value.split(',');
           // 然后将数组转为对象数组
           this.fileList = list.map(item => {
+            console.log(this.baseUrl, item)
             if (typeof item === "string") {
-              if (item.indexOf(this.baseUrl) === -1) {
+              if (item.indexOf(this.baseUrl) === -1 && !item.startsWith('http')) {
                 item = { name: this.baseUrl + item, url: this.baseUrl + item };
               } else {
                 item = { name: item, url: item };
@@ -188,6 +189,10 @@ export default {
 .el-list-leave-active {
   opacity: 0;
   transform: translateY(0);
+}
+
+::v-deep .el-upload-list__item-thumbnail {
+  object-fit: contain;
 }
 </style>
 

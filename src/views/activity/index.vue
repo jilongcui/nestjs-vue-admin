@@ -1,15 +1,21 @@
 <template>
   <div class="app-container">
-    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
+    <!-- <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
       <el-form-item label="地址" prop="address">
         <el-input v-model="queryParams.address" placeholder="请输入地址" clearable @keyup.enter.native="handleQuery" />
       </el-form-item>
       <el-form-item label="用户ID" prop="userId">
         <el-input v-model="queryParams.userId" placeholder="请输入用户ID" clearable @keyup.enter.native="handleQuery" />
       </el-form-item>
-      <el-form-item label="地址类型" prop="addressType">
-        <el-select v-model="queryParams.addressType" placeholder="地址类型" clearable>
-          <el-option v-for="dict in dict.type.wallet_address_type" :key="dict.value" :label="dict.label"
+      <el-form-item label="状态" prop="type">
+        <el-select v-model="queryParams.status" placeholder="活动状态" clearable>
+          <el-option v-for="dict in dict.type.activity_status" :key="dict.value" :label="dict.label"
+            :value="dict.value" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="类型" prop="type">
+        <el-select v-model="queryParams.type" placeholder="活动类型" clearable>
+          <el-option v-for="dict in dict.type.activity_type" :key="dict.value" :label="dict.label"
             :value="dict.value" />
         </el-select>
       </el-form-item>
@@ -17,7 +23,7 @@
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
       </el-form-item>
-    </el-form>
+    </el-form> -->
 
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
@@ -35,22 +41,32 @@
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="addressList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="activityList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="序号" align="center" prop="id" width="60" />
-      <el-table-column label="地址" align="center" prop="address" />
-      <!-- <el-table-column label="公告类型" align="center" prop="addressType" width="100">
+      <el-table-column label="标题" align="center" prop="title" />
+      <el-table-column label="supply" align="center" prop="supply" width="80" />
+      <el-table-column label="current" align="center" prop="current" width="80" />
+      <el-table-column label="deliverDelay" align="center" prop="deliverDelay" width="100" />
+      <el-table-column label="price" align="center" prop="price" width="100" />
+      <el-table-column label="presalePrice" align="center" prop="presalePrice" width="100" />
+      <el-table-column label="needOrder" align="center" prop="needOrder" width="100" />
+      <el-table-column label="类型" align="center" prop="type" width="100">
         <template slot-scope="scope">
-          <dict-tag :options="dict.type.sys_address_type" :value="scope.row.addressType" />
+          <dict-tag :options="dict.type.activity_type" :value="scope.row.type" />
         </template>
-      </el-table-column> -->
-      <el-table-column label="用户ID" align="center" prop="userId" width="90" />
-      <el-table-column label="应用ID" align="center" prop="appId" width="90" />
-      <!-- <el-table-column label="状态" align="center" prop="status" width="100">
+      </el-table-column>
+      <el-table-column label="状态" align="center" prop="status" width="100">
         <template slot-scope="scope">
-          <dict-tag :options="dict.type.sys_notice_status" :value="scope.row.status" />
+          <dict-tag :options="dict.type.activity_status" :value="scope.row.status" />
         </template>
-      </el-table-column> -->
+      </el-table-column>
+      <el-table-column label="活动时间" align="center" width="240">
+        <template slot-scope="scope">
+          <div>开始：{{ parseTime(scope.row.startTime) }}</div>
+          <div>结束：{{ parseTime(scope.row.endTime) }}</div>
+        </template>
+      </el-table-column>
       <el-table-column label="创建时间" align="center" prop="createTime" width="160">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.createTime) }}</span>
@@ -70,28 +86,73 @@
       @pagination="getList" />
 
     <!-- 添加或修改公告对话框 -->
-    <el-dialog :title="title" :visible.sync="open" width="780px" append-to-body>
-      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
+    <el-dialog :title="title" :visible.sync="open" width="580px" append-to-body>
+      <el-form ref="form" :model="form" :rules="rules" label-width="100px">
+        <el-form-item label="活动标题" prop="title">
+          <el-input v-model="form.title"></el-input>
+        </el-form-item>
+        <el-form-item label="ruleInfo" prop="ruleInfo">
+          <el-input type="textarea" v-model="form.ruleInfo" />
+        </el-form-item>
+        <el-form-item label="needOrder" prop="needOrder">
+          <el-input v-model="form.needOrder"></el-input>
+        </el-form-item>
+        <el-form-item label="deliverDelay" prop="deliverDelay">
+          <el-input-number controls-position="right" v-model="form.deliverDelay" />
+        </el-form-item>
+        <el-form-item label="supply" prop="supply">
+          <el-input-number controls-position="right" v-model="form.supply" />
+        </el-form-item>
+        <el-form-item label="current" prop="current">
+          <el-input-number controls-position="right" v-model="form.current" />
+        </el-form-item>
+
+        <el-form-item label="price" prop="price">
+          <el-input-number controls-position="right" v-model="form.price" />
+        </el-form-item>
+        <el-form-item label="presalePrice" prop="presalePrice">
+          <el-input-number controls-position="right" v-model="form.presalePrice" />
+        </el-form-item>
+        <el-form-item label="活动时间" prop="timeRange">
+          <el-date-picker v-model="form.timeRange" type="datetimerange" range-separator="至" start-placeholder="开始时间"
+            end-placeholder="结束时间">
+          </el-date-picker>
+        </el-form-item>
         <el-row>
-          <el-col :span="8">
-            <el-form-item label="用户ID" prop="userId">
-              <el-input v-model="form.userId" placeholder="请输入地址" />
+          <el-col :span="11">
+            <el-form-item label="活动类型" prop="type">
+              <el-select v-model="form.type" placeholder="请选择活动类型">
+                <el-option v-for="dict in dict.type.activity_type" :key="dict.value" :label="dict.label"
+                  :value="dict.value"></el-option>
+              </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="8">
-            <el-form-item label="应用ID" prop="appId">
-              <el-input v-model="form.appId" placeholder="请输入地址" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="地址类型" prop="addressType">
-              <el-select v-model="form.addressType" placeholder="请选择地址类型">
-                <el-option v-for="dict in dict.type.wallet_address_type" :key="dict.value" :label="dict.label"
+          <el-col :offset="2" :span="11">
+            <el-form-item label="status" prop="status">
+              <el-select v-model="form.status" placeholder="请选择活动状态">
+                <el-option v-for="dict in dict.type.activity_status" :key="dict.value" :label="dict.label"
                   :value="dict.value"></el-option>
               </el-select>
             </el-form-item>
           </el-col>
         </el-row>
+        <el-form-item v-if="enableEditCollections" label="活动藏品" prop="timeRange">
+          <el-row>
+            <el-col :span="12" v-for="c in currentCollections" :key="c.id">
+              <div style="padding: 6px">
+
+                <ActivityCollectionItem :item="c" v-on:remove="handleRemoveCollection(c)" />
+              </div>
+            </el-col>
+            <el-col :span="12">
+              <div style="padding: 6px">
+                <AddActivityCollectionItem v-on:add="handleAddCollection" />
+              </div>
+            </el-col>
+          </el-row>
+
+        </el-form-item>
+
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
@@ -102,11 +163,36 @@
 </template>
 
 <script>
-import { listAddress, getNotice, delNotice, addAddress, updateNotice } from "@/api/wallet/address";
+import {
+  getActivityList, getActivityDetailsById,
+  deleteActivityById, deleteActivityByIds,
+  appendCollectionToActivity, removeCollectionFromActivity,
+  updateActivity, addActivity
+} from "@/api/activity";
+import ActivityCollectionItem from "./components/ActivityCollectionItem.vue";
+import AddActivityCollectionItem from "./components/AddActivityCollectionItem.vue";
+
+const DEFAULT_FORM = {
+  title: undefined,
+  ruleInfo: undefined,
+  supply: undefined,
+  current: undefined,
+  presalePrice: undefined,
+  price: undefined,
+  needOrder: undefined,
+  deliverDelay: undefined,
+  contractId: undefined,
+  type: undefined,
+  status: undefined
+}
 
 export default {
-  name: "Collection",
-  dicts: ['sys_notice_status', 'wallet_address_type'],
+  name: "Activity",
+  dicts: ['activity_status', 'activity_type'],
+  components: {
+    ActivityCollectionItem,
+    AddActivityCollectionItem
+  },
   data() {
     return {
       // 遮罩层
@@ -122,33 +208,61 @@ export default {
       // 总条数
       total: 0,
       // 公告表格数据
-      addressList: [],
+      activityList: [],
       // 弹出层标题
       title: "",
       // 是否显示弹出层
       open: false,
+      // 表单中是否允许编辑活动内的藏品(新增活动表单不允许，修改活动表单允许)
+      enableEditCollections: false,
+      // 当前活动的藏品
+      currentCollections: [],
       // 查询参数
       queryParams: {
         pageNum: 1,
         pageSize: 10,
-        addressType: 'ETH',
-        address: undefined,
-        userId: undefined,
-        status: undefined
+        title: undefined,
+        type: undefined,
+        status: undefined,
       },
       // 表单参数
       form: {
+        ...DEFAULT_FORM
       },
       // 表单校验
       rules: {
-        userId: [
-          { required: true, message: "用户ID不能为空", trigger: "change" }
+        title: [
+          { required: true, message: "活动标题不能为空", trigger: "blur" }
         ],
-        appId: [
-          { required: true, message: "APPID不能为空", trigger: "change" }
+        ruleInfo: [
+          { required: true, message: "规则不能为空", trigger: "blur" }
         ],
-        addressType: [
-          { required: true, message: "地址类型不能为空", trigger: "change" }
+        supply: [
+          { required: true, message: "supply不能为空", trigger: "blur" }
+        ],
+        current: [
+          { required: true, message: "current不能为空", trigger: "blur" }
+        ],
+        presalePrice: [
+          { required: true, message: "presalePrice不能为空", trigger: "blur" }
+        ],
+        price: [
+          { required: true, message: "price不能为空", trigger: "blur" }
+        ],
+        needOrder: [
+          { required: true, message: "needOrder不能为空", trigger: "blur" }
+        ],
+        deliverDelay: [
+          { required: true, message: "deliverDelay不能为空", trigger: "blur" }
+        ],
+        type: [
+          { required: true, message: "type不能为空", trigger: "change" }
+        ],
+        status: [
+          { required: true, message: "status不能为空", trigger: "change" }
+        ],
+        timeRange: [
+          { required: true, message: "活动时间不能为空" }
         ],
       }
     };
@@ -157,11 +271,11 @@ export default {
     this.getList();
   },
   methods: {
-    /** 查询公告列表 */
+    /** 查询列表 */
     getList() {
       this.loading = true;
-      listAddress(this.queryParams).then(response => {
-        this.addressList = response.data.rows;
+      getActivityList(this.queryParams).then(response => {
+        this.activityList = response.data.rows;
         this.total = response.data.total;
         this.loading = false;
       });
@@ -174,11 +288,7 @@ export default {
     // 表单重置
     reset() {
       this.form = {
-        userId: undefined,
-        address: undefined,
-        addressType: undefined,
-        appId: "0",
-        status: "0"
+        ...DEFAULT_FORM
       };
       this.resetForm("form");
     },
@@ -194,42 +304,57 @@ export default {
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.ids = selection.map(item => item.noticeId)
+      this.ids = selection.map(item => item.id)
       this.single = selection.length != 1
       this.multiple = !selection.length
     },
     /** 新增按钮操作 */
     handleAdd() {
       this.reset();
+      this.enableEditCollections = false;
       this.open = true;
-      this.title = "添加公告";
+
+      this.title = "添加活动";
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
+      this.enableEditCollections = true;
       this.reset();
-      const noticeId = row.noticeId || this.ids
-      getNotice(noticeId).then(response => {
-        this.form = response.data;
+      const id = row.id || this.ids
+      getActivityDetailsById(id).then(response => {
+        const { type, startTime, endTime, collections, ...reset } = response.data
+        this.form = {
+          ...reset,
+          type: type?.toString(),
+          timeRange: [startTime, endTime]
+        }
+        this.currentCollections = collections;
         this.open = true;
-        this.title = "修改公告";
+        this.title = "修改活动";
       });
     },
-    /** 复制代码成功 */
-    clipboardSuccess() {
-      this.$modal.msgSuccess("复制成功");
-    },
     /** 提交按钮 */
+
     submitForm: function () {
+      console.log(this.form)
       this.$refs["form"].validate(valid => {
+        console.log(valid)
         if (valid) {
-          if (this.form.noticeId != undefined) {
-            updateNotice(this.form).then(response => {
+          const { type, timeRange, ...reset } = this.form
+          const data = {
+            ...reset,
+            type: type ? parseInt(type) : undefined,
+            startTime: timeRange[0],
+            endTime: timeRange[0],
+          }
+          if (this.form.id != undefined) {
+            updateActivity(data, this.form.id).then(response => {
               this.$modal.msgSuccess("修改成功");
               this.open = false;
               this.getList();
             });
           } else {
-            addAddress(this.form).then(response => {
+            addActivity(data).then(response => {
               this.$modal.msgSuccess("新增成功");
               this.open = false;
               this.getList();
@@ -240,13 +365,29 @@ export default {
     },
     /** 删除按钮操作 */
     handleDelete(row) {
-      const noticeIds = row.noticeId || this.ids
-      this.$modal.confirm('是否确认删除公告编号为"' + noticeIds + '"的数据项？').then(function () {
-        return delNotice(noticeIds);
+      const ids = row.id || this.ids
+      this.$modal.confirm('是否确认删除编号为"' + ids + '"的活动项？').then(function () {
+        return deleteActivityByIds(ids);
       }).then(() => {
         this.getList();
         this.$modal.msgSuccess("删除成功");
       }).catch(() => { });
+    },
+    handleRemoveCollection(c) {
+      if (this.form.id != undefined && c.id !== undefined) {
+        removeCollectionFromActivity(this.form.id, c.id).then(response => {
+          this.$modal.msgSuccess("删除成功");
+          this.currentCollections = this.currentCollections.filter((item) => item.id !== c.id)
+        });
+      }
+    },
+    handleAddCollection(c) {
+      if (this.form.id != undefined && c.id !== undefined) {
+        appendCollectionToActivity(this.form.id, c.id).then(response => {
+          this.$modal.msgSuccess("添加成功");
+          this.currentCollections = [...this.currentCollections, c]
+        });
+      }
     }
   }
 };

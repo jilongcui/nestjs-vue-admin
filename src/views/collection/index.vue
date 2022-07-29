@@ -1,16 +1,13 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="地址" prop="address">
-        <el-input v-model="queryParams.address" placeholder="请输入地址" clearable @keyup.enter.native="handleQuery" />
+      <el-form-item label="名称" prop="name">
+        <el-input v-model="queryParams.name" placeholder="请输入藏品名称" clearable @keyup.enter.native="handleQuery" />
       </el-form-item>
-      <el-form-item label="用户ID" prop="userId">
-        <el-input v-model="queryParams.userId" placeholder="请输入用户ID" clearable @keyup.enter.native="handleQuery" />
-      </el-form-item>
-      <el-form-item label="地址类型" prop="addressType">
-        <el-select v-model="queryParams.addressType" placeholder="地址类型" clearable>
-          <el-option v-for="dict in dict.type.wallet_address_type" :key="dict.value" :label="dict.label"
-            :value="dict.value" />
+
+      <el-form-item label="合约" prop="contractId">
+        <el-select v-model="queryParams.contractId" placeholder="请选择合约" clearable>
+          <el-option v-for="c in contractList" :key="c.id" :label="c.chain" :value="c.id" />
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -21,47 +18,49 @@
 
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
-        <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
-          v-hasPermi="['system:notice:add']">新增</el-button>
+        <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd">新增</el-button>
       </el-col>
       <el-col :span="1.5">
-        <el-button type="success" plain icon="el-icon-edit" size="mini" :disabled="single" @click="handleUpdate"
-          v-hasPermi="['system:notice:edit']">修改</el-button>
+        <el-button type="success" plain icon="el-icon-edit" size="mini" :disabled="single" @click="handleUpdate">修改
+        </el-button>
       </el-col>
       <el-col :span="1.5">
-        <el-button type="danger" plain icon="el-icon-delete" size="mini" :disabled="multiple" @click="handleDelete"
-          v-hasPermi="['system:notice:remove']">删除</el-button>
+        <el-button type="danger" plain icon="el-icon-delete" size="mini" :disabled="multiple" @click="handleDelete">删除
+        </el-button>
       </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="addressList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="dataSource" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="序号" align="center" prop="id" width="60" />
-      <el-table-column label="地址" align="center" prop="address" />
+      <el-table-column label="名称" align="center" prop="name" />
       <!-- <el-table-column label="公告类型" align="center" prop="addressType" width="100">
         <template slot-scope="scope">
           <dict-tag :options="dict.type.sys_address_type" :value="scope.row.addressType" />
         </template>
       </el-table-column> -->
-      <el-table-column label="用户ID" align="center" prop="userId" width="90" />
-      <el-table-column label="应用ID" align="center" prop="appId" width="90" />
-      <!-- <el-table-column label="状态" align="center" prop="status" width="100">
+      <el-table-column label="supply" align="center" prop="supply" width="90" />
+      <el-table-column label="current" align="center" prop="current" width="90" />
+      <el-table-column label="状态" align="center" prop="status" width="100">
         <template slot-scope="scope">
-          <dict-tag :options="dict.type.sys_notice_status" :value="scope.row.status" />
+          <dict-tag :options="dict.type.collection_status" :value="scope.row.status" />
         </template>
-      </el-table-column> -->
-      <el-table-column label="创建时间" align="center" prop="createTime" width="160">
+      </el-table-column>
+      <el-table-column label="author" align="center" prop="author" width="160">
         <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.createTime) }}</span>
+          <span>{{ scope.row.author.nickName }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="contract" align="center" prop="contract" width="160">
+        <template slot-scope="scope">
+          <span>{{ scope.row.contract.chain }}</span>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
-          <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)"
-            v-hasPermi="['system:notice:edit']">修改</el-button>
-          <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)"
-            v-hasPermi="['system:notice:remove']">删除</el-button>
+          <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)">修改</el-button>
+          <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -69,25 +68,59 @@
     <pagination v-show="total > 0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize"
       @pagination="getList" />
 
-    <!-- 添加或修改公告对话框 -->
-    <el-dialog :title="title" :visible.sync="open" width="780px" append-to-body>
+    <!-- 添加或修改对话框 -->
+    <el-dialog :title="title" :visible.sync="open" width="580px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
         <el-row>
-          <el-col :span="8">
-            <el-form-item label="用户ID" prop="userId">
-              <el-input v-model="form.userId" placeholder="请输入地址" />
+          <el-col :span="24">
+            <el-form-item label="name" prop="name">
+              <el-input v-model="form.name" placeholder="请输入藏品名称" />
             </el-form-item>
           </el-col>
-          <el-col :span="8">
-            <el-form-item label="应用ID" prop="appId">
-              <el-input v-model="form.appId" placeholder="请输入地址" />
+          <el-col :span="24">
+            <el-form-item label="remark" prop="remark">
+              <el-input type="textarea" v-model="form.remark" placeholder="请输入" />
             </el-form-item>
           </el-col>
-          <el-col :span="8">
-            <el-form-item label="地址类型" prop="addressType">
-              <el-select v-model="form.addressType" placeholder="请选择地址类型">
-                <el-option v-for="dict in dict.type.wallet_address_type" :key="dict.value" :label="dict.label"
+          <el-col :span="24">
+            <el-form-item label="desc" prop="desc">
+              <el-input type="textarea" v-model="form.desc" placeholder="请输入" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="图片" prop="images" required>
+              <image-upload v-model="form.images">
+                <el-button size="small">
+                  选择
+                  <i class="el-icon-upload el-icon--right"></i>
+                </el-button>
+              </image-upload>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="supply" prop="supply">
+              <el-input-number controls-position="right" v-model="form.supply" placeholder="" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="current" prop="current">
+              <el-input-number controls-position="right" v-model="form.current" placeholder="" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="状态" prop="status">
+              <el-select v-model="form.status" placeholder="请选择状态">
+                <el-option v-for="dict in dict.type.collection_status" :key="dict.value" :label="dict.label"
                   :value="dict.value"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="合约" prop="contractId">
+              <el-select v-model="form.contractId" placeholder="请选择合约">
+                <el-option v-for="c in contractList" :key="c.id" :label="c.chain" :value="c.id"></el-option>
               </el-select>
             </el-form-item>
           </el-col>
@@ -102,12 +135,31 @@
 </template>
 
 <script>
-import { listAddress, getNotice, delNotice, addAddress, updateNotice } from "@/api/wallet/address";
-import { getCollectionList } from "@/api/collection";
+import {
+  getCollectionList,
+  deleteCollectionByIds,
+  getCollectionDetailsById,
+  updateCollection, addCollection
+} from "@/api/collection";
+import { getContractList } from "@/api/contract";
+import { mapGetters } from "vuex";
+
+
+const DEFAULT_FORM = {
+  name: undefined,
+  remark: undefined,
+  desc: undefined,
+  images: undefined,
+  supply: undefined,
+  current: undefined,
+  status: undefined,
+  authorId: undefined,
+  contractId: undefined
+}
 
 export default {
   name: "Collection",
-  dicts: ['sys_notice_status', 'wallet_address_type'],
+  dicts: ['collection_status'],
   data() {
     return {
       // 遮罩层
@@ -122,8 +174,6 @@ export default {
       showSearch: true,
       // 总条数
       total: 0,
-      // 公告表格数据
-      addressList: [],
       // 弹出层标题
       title: "",
       // 是否显示弹出层
@@ -132,42 +182,55 @@ export default {
       queryParams: {
         pageNum: 1,
         pageSize: 10,
-        addressType: 'ETH',
-        address: undefined,
-        userId: undefined,
         status: undefined
       },
       // 表单参数
       form: {
+        ...DEFAULT_FORM
       },
       // 表单校验
       rules: {
-        userId: [
-          { required: true, message: "用户ID不能为空", trigger: "change" }
+        name: [
+          { required: true, message: "藏品名称不能为空", trigger: "change" }
         ],
-        appId: [
-          { required: true, message: "APPID不能为空", trigger: "change" }
+        images: [
+          { required: true, message: "图片不能为空", trigger: "change" }
         ],
-        addressType: [
-          { required: true, message: "地址类型不能为空", trigger: "change" }
+        supply: [
+          { required: true, message: "supply不能为空", trigger: "change" }
         ],
-      }
+        current: [
+          { required: true, message: "current不能为空", trigger: "change" }
+        ],
+      },
+
+      dataSource: [],
+      contractList: [],
     };
+  },
+  computed: {
+    ...mapGetters(["userInfo"]),
   },
   created() {
     this.getList();
+
+    getContractList({ pageNum: 1, pageSize: 999 }).then(res => {
+      if (res.code === 200) {
+        this.contractList = res.data.rows
+      }
+    })
   },
   methods: {
-    /** 查询公告列表 */
+    /** 查询列表 */
     getList() {
       this.loading = true;
-      listAddress(this.queryParams).then(response => {
-        this.addressList = response.data.rows;
-        this.total = response.data.total;
+      getCollectionList(this.queryParams).then(res => {
+        if (res.code === 200) {
+          this.dataSource = res.data.rows
+          this.total = res.data.total;
+        }
+      }).finally(() => {
         this.loading = false;
-      });
-      getCollectionList({ ...this.queryParams, ordersId: '1' }).then(res => {
-        console.log(res)
       })
     },
     // 取消按钮
@@ -178,11 +241,7 @@ export default {
     // 表单重置
     reset() {
       this.form = {
-        userId: undefined,
-        address: undefined,
-        addressType: undefined,
-        appId: "0",
-        status: "0"
+        ...DEFAULT_FORM
       };
       this.resetForm("form");
     },
@@ -198,7 +257,7 @@ export default {
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.ids = selection.map(item => item.noticeId)
+      this.ids = selection.map(item => item.id)
       this.single = selection.length != 1
       this.multiple = !selection.length
     },
@@ -206,34 +265,38 @@ export default {
     handleAdd() {
       this.reset();
       this.open = true;
-      this.title = "添加公告";
+      this.title = "添加藏品";
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
+      console.log(row)
       this.reset();
-      const noticeId = row.noticeId || this.ids
-      getNotice(noticeId).then(response => {
+      const id = row.id || this.ids
+      getCollectionDetailsById(id).then(response => {
         this.form = response.data;
         this.open = true;
-        this.title = "修改公告";
+        this.title = "修改藏品";
       });
-    },
-    /** 复制代码成功 */
-    clipboardSuccess() {
-      this.$modal.msgSuccess("复制成功");
     },
     /** 提交按钮 */
     submitForm: function () {
+      console.log(this.form)
       this.$refs["form"].validate(valid => {
         if (valid) {
-          if (this.form.noticeId != undefined) {
-            updateNotice(this.form).then(response => {
+          const { images, ...reset } = this.form
+          const data = {
+            ...reset,
+            images: typeof images === "string" ? images.split(',') : images,
+            authorId: this.userInfo.userId
+          }
+          if (this.form.id != undefined) {
+            updateCollection(data).then(response => {
               this.$modal.msgSuccess("修改成功");
               this.open = false;
               this.getList();
             });
           } else {
-            addAddress(this.form).then(response => {
+            addCollection(data).then(response => {
               this.$modal.msgSuccess("新增成功");
               this.open = false;
               this.getList();
@@ -244,9 +307,9 @@ export default {
     },
     /** 删除按钮操作 */
     handleDelete(row) {
-      const noticeIds = row.noticeId || this.ids
-      this.$modal.confirm('是否确认删除公告编号为"' + noticeIds + '"的数据项？').then(function () {
-        return delNotice(noticeIds);
+      const ids = row.id || this.ids
+      this.$modal.confirm('是否确认删除ID为"' + ids + '"的数据项？').then(function () {
+        return deleteCollectionByIds(ids);
       }).then(() => {
         this.getList();
         this.$modal.msgSuccess("删除成功");

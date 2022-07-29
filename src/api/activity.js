@@ -44,12 +44,12 @@ export function addActivity(activityObj) {
  *  type:	0 | 1 | 2 | 3; // 类型 0:首发 1:盲盒 2:预售 3:秒杀
  *  status:	'0' | '1' | '2' | '3' | '4' | '5';  // 状态 0: 未展出 1:展示 2:预售 3:发货中 4:销售结束 5:取消
  * }} activityObj
- *
+ * @param {string | number} id
  * @returns
  */
-export function updateActivity(activityObj) {
+export function updateActivity(activityObj, id) {
   return request({
-    url: "/activity",
+    url: "/activity/" + id,
     headers: {
       isToken: true,
     },
