@@ -19,13 +19,22 @@ export default {
             default: {},
         },
     },
-
+    data() {
+        return {
+            baseUrl: process.env.VUE_APP_BASE_API,
+        }
+    },
     computed: {
         cover() {
+            let cover = ""
             if (this.item && typeof this.item === "object" && this.item.images) {
-                return this.item.images[0];
+                cover = this.item.images[0];
             }
-            return "";
+
+            if (cover.indexOf(this.baseUrl) === -1 && !cover.startsWith('http')) {
+                cover = this.baseUrl + cover
+            }
+            return cover;
         },
     },
 };

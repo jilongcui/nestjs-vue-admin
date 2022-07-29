@@ -322,10 +322,9 @@ export default {
       this.reset();
       const id = row.id || this.ids
       getActivityDetailsById(id).then(response => {
-        const { type, startTime, endTime, collections, ...reset } = response.data
+        const { startTime, endTime, collections, ...reset } = response.data
         this.form = {
           ...reset,
-          type: type?.toString(),
           timeRange: [startTime, endTime]
         }
         this.currentCollections = collections;
@@ -340,10 +339,9 @@ export default {
       this.$refs["form"].validate(valid => {
         console.log(valid)
         if (valid) {
-          const { type, timeRange, ...reset } = this.form
+          const { timeRange, ...reset } = this.form
           const data = {
             ...reset,
-            type: type ? parseInt(type) : undefined,
             startTime: timeRange[0],
             endTime: timeRange[0],
           }
