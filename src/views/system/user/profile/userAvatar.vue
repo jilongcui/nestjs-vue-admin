@@ -1,22 +1,16 @@
 <template>
   <div>
-    <div class="user-info-head" @click="editCropper()"><img v-bind:src="options.img" title="点击上传头像" class="img-circle img-lg" /></div>
-    <el-dialog :title="title" :visible.sync="open" width="800px" append-to-body @opened="modalOpened"  @close="closeDialog">
+    <div class="user-info-head" @click="editCropper()"><img v-bind:src="options.img" title="点击上传头像"
+        class="img-circle img-lg" /></div>
+    <el-dialog :title="title" :visible.sync="open" width="800px" append-to-body @opened="modalOpened"
+      @close="closeDialog">
       <el-row>
-        <el-col :xs="24" :md="12" :style="{height: '350px'}">
-          <vue-cropper
-            ref="cropper"
-            :img="options.img"
-            :info="true"
-            :autoCrop="options.autoCrop"
-            :autoCropWidth="options.autoCropWidth"
-            :autoCropHeight="options.autoCropHeight"
-            :fixedBox="options.fixedBox"
-            @realTime="realTime"
-            v-if="visible"
-          />
+        <el-col :xs="24" :md="12" :style="{ height: '350px' }">
+          <vue-cropper ref="cropper" :img="options.img" :info="true" :autoCrop="options.autoCrop"
+            :autoCropWidth="options.autoCropWidth" :autoCropHeight="options.autoCropHeight" :fixedBox="options.fixedBox"
+            @realTime="realTime" v-if="visible" />
         </el-col>
-        <el-col :xs="24" :md="12" :style="{height: '350px'}">
+        <el-col :xs="24" :md="12" :style="{ height: '350px' }">
           <div class="avatar-upload-preview">
             <img :src="previews.url" :style="previews.img" />
           </div>
@@ -32,19 +26,19 @@
             </el-button>
           </el-upload>
         </el-col>
-        <el-col :lg="{span: 1, offset: 2}" :md="2">
+        <el-col :lg="{ span: 1, offset: 2 }" :md="2">
           <el-button icon="el-icon-plus" size="small" @click="changeScale(1)"></el-button>
         </el-col>
-        <el-col :lg="{span: 1, offset: 1}" :md="2">
+        <el-col :lg="{ span: 1, offset: 1 }" :md="2">
           <el-button icon="el-icon-minus" size="small" @click="changeScale(-1)"></el-button>
         </el-col>
-        <el-col :lg="{span: 1, offset: 1}" :md="2">
+        <el-col :lg="{ span: 1, offset: 1 }" :md="2">
           <el-button icon="el-icon-refresh-left" size="small" @click="rotateLeft()"></el-button>
         </el-col>
-        <el-col :lg="{span: 1, offset: 1}" :md="2">
+        <el-col :lg="{ span: 1, offset: 1 }" :md="2">
           <el-button icon="el-icon-refresh-right" size="small" @click="rotateRight()"></el-button>
         </el-col>
-        <el-col :lg="{span: 2, offset: 6}" :md="2">
+        <el-col :lg="{ span: 2, offset: 6 }" :md="2">
           <el-button type="primary" size="small" @click="uploadImg()">提 交</el-button>
         </el-col>
       </el-row>
@@ -126,7 +120,7 @@ export default {
         formData.append("avatarfile", data);
         uploadAvatar(formData).then(response => {
           this.open = false;
-          this.options.img = process.env.VUE_APP_BASE_API + response.imgUrl;
+          this.options.img = process.env.VUE_APP_BASE_API + response.data.imgUrl;
           store.commit('SET_AVATAR', this.options.img);
           this.$modal.msgSuccess("修改成功");
           this.visible = false;
