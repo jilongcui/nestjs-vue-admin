@@ -343,7 +343,7 @@ export default {
           const data = {
             ...reset,
             startTime: timeRange[0],
-            endTime: timeRange[0],
+            endTime: timeRange[1],
           }
           if (this.form.id != undefined) {
             updateActivity(data, this.form.id).then(response => {
