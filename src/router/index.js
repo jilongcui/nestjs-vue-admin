@@ -89,32 +89,32 @@ export const constantRoutes = [
     ],
   },
 
-  {
-    path: "/collection",
-    component: Layout,
-    redirect: "index",
-    children: [
-      {
-        path: "index",
-        component: () => import("@/views/collection/index"),
-        name: "Collection",
-        meta: { title: "藏品管理", icon: "dashboard", affix: true },
-      },
-    ],
-  },
-  {
-    path: "/activity",
-    component: Layout,
-    redirect: "index",
-    children: [
-      {
-        path: "index",
-        component: () => import("@/views/activity/index"),
-        name: "Collection",
-        meta: { title: "活动管理", icon: "dashboard", affix: true },
-      },
-    ],
-  },
+  // {
+  //   path: "/collection",
+  //   component: Layout,
+  //   redirect: "index",
+  //   children: [
+  //     {
+  //       path: "index",
+  //       component: () => import("@/views/collection/index"),
+  //       name: "Collection",
+  //       meta: { title: "藏品管理", icon: "dashboard", affix: true },
+  //     },
+  //   ],
+  // },
+  // {
+  //   path: "/activity",
+  //   component: Layout,
+  //   redirect: "index",
+  //   children: [
+  //     {
+  //       path: "index",
+  //       component: () => import("@/views/activity/index"),
+  //       name: "Collection",
+  //       meta: { title: "活动管理", icon: "dashboard", affix: true },
+  //     },
+  //   ],
+  // },
 ];
 
 // 动态路由，基于用户权限动态去加载
