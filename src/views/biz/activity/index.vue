@@ -91,6 +91,14 @@
         <el-form-item label="活动标题" prop="title">
           <el-input v-model="form.title"></el-input>
         </el-form-item>
+        <el-form-item label="封面图片" prop="coverImage">
+          <image-upload v-model="form.coverImage" :limit="1">
+            <el-button size="small">
+              选择
+              <i class="el-icon-upload el-icon--right"></i>
+            </el-button>
+          </image-upload>
+        </el-form-item>
         <el-form-item label="ruleInfo" prop="ruleInfo">
           <el-input type="textarea" v-model="form.ruleInfo" />
         </el-form-item>
@@ -165,7 +173,7 @@
 <script>
 import {
   getActivityList, getActivityDetailsById,
-  deleteActivityById, deleteActivityByIds,
+  deleteActivityByIds,
   appendCollectionToActivity, removeCollectionFromActivity,
   updateActivity, addActivity
 } from "@/api/activity";
@@ -174,6 +182,7 @@ import AddActivityCollectionItem from "./components/AddActivityCollectionItem.vu
 
 const DEFAULT_FORM = {
   title: undefined,
+  coverImage: undefined,
   ruleInfo: undefined,
   supply: undefined,
   current: undefined,
@@ -232,28 +241,31 @@ export default {
       // 表单校验
       rules: {
         title: [
-          { required: true, message: "活动标题不能为空", trigger: "blur" }
+          { required: true, message: "活动标题不能为空" }
+        ],
+        coverImage: [
+          { required: true, message: "活动封面不能为空" }
         ],
         ruleInfo: [
-          { required: true, message: "规则不能为空", trigger: "blur" }
+          { required: true, message: "规则不能为空" }
         ],
         supply: [
-          { required: true, message: "supply不能为空", trigger: "blur" }
+          { required: true, message: "supply不能为空" }
         ],
         current: [
-          { required: true, message: "current不能为空", trigger: "blur" }
+          { required: true, message: "current不能为空" }
         ],
         presalePrice: [
-          { required: true, message: "presalePrice不能为空", trigger: "blur" }
+          { required: true, message: "presalePrice不能为空" }
         ],
         price: [
-          { required: true, message: "price不能为空", trigger: "blur" }
+          { required: true, message: "price不能为空" }
         ],
         needOrder: [
-          { required: true, message: "needOrder不能为空", trigger: "blur" }
+          { required: true, message: "needOrder不能为空" }
         ],
         deliverDelay: [
-          { required: true, message: "deliverDelay不能为空", trigger: "blur" }
+          { required: true, message: "deliverDelay不能为空" }
         ],
         type: [
           { required: true, message: "type不能为空", trigger: "change" }

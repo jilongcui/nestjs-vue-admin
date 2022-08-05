@@ -5,6 +5,7 @@ import request from "@/utils/request";
  *
  * @param {{
  *  title:	string;
+ *  coverImage: string;
  *  ruleInfo:	string;
  *  supply:	number;
  *  current:	number;
@@ -34,6 +35,7 @@ export function addActivity(activityObj) {
  *
  * @param {{
  *  title:	string;
+ *  coverImage: string;
  *  ruleInfo:	string;
  *  supply:	number;
  *  current:	number;

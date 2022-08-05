@@ -42,7 +42,7 @@ export default {
   },
   data() {
     return {
-      title: '爱芯财务管理系统',
+      title: process.env.VUE_APP_TITLE,
       logo: logoImg
     }
   }
