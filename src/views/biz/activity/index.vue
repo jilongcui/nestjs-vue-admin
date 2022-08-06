@@ -49,8 +49,6 @@
       <el-table-column label="current" align="center" prop="current" width="80" />
       <el-table-column label="deliverDelay" align="center" prop="deliverDelay" width="100" />
       <el-table-column label="price" align="center" prop="price" width="100" />
-      <el-table-column label="presalePrice" align="center" prop="presalePrice" width="100" />
-      <el-table-column label="needOrder" align="center" prop="needOrder" width="100" />
       <el-table-column label="类型" align="center" prop="type" width="100">
         <template slot-scope="scope">
           <dict-tag :options="dict.type.activity_type" :value="scope.row.type" />
@@ -102,9 +100,6 @@
         <el-form-item label="ruleInfo" prop="ruleInfo">
           <el-input type="textarea" v-model="form.ruleInfo" />
         </el-form-item>
-        <el-form-item label="needOrder" prop="needOrder">
-          <el-input v-model="form.needOrder"></el-input>
-        </el-form-item>
         <el-form-item label="deliverDelay" prop="deliverDelay">
           <el-input-number controls-position="right" v-model="form.deliverDelay" />
         </el-form-item>
@@ -117,9 +112,6 @@
 
         <el-form-item label="price" prop="price">
           <el-input-number controls-position="right" v-model="form.price" />
-        </el-form-item>
-        <el-form-item label="presalePrice" prop="presalePrice">
-          <el-input-number controls-position="right" v-model="form.presalePrice" />
         </el-form-item>
         <el-form-item label="活动时间" prop="timeRange">
           <el-date-picker v-model="form.timeRange" type="datetimerange" range-separator="至" start-placeholder="开始时间"
@@ -186,9 +178,7 @@ const DEFAULT_FORM = {
   ruleInfo: undefined,
   supply: undefined,
   current: undefined,
-  presalePrice: undefined,
   price: undefined,
-  needOrder: undefined,
   deliverDelay: undefined,
   contractId: undefined,
   type: undefined,
@@ -255,14 +245,8 @@ export default {
         current: [
           { required: true, message: "current不能为空" }
         ],
-        presalePrice: [
-          { required: true, message: "presalePrice不能为空" }
-        ],
         price: [
           { required: true, message: "price不能为空" }
-        ],
-        needOrder: [
-          { required: true, message: "needOrder不能为空" }
         ],
         deliverDelay: [
           { required: true, message: "deliverDelay不能为空" }
