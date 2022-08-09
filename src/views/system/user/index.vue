@@ -108,8 +108,8 @@
           </el-table-column>
         </el-table>
 
-        <pagination v-show="total > 0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize"
-          @pagination="getList" />
+        <pagination v-show="total > 0" :total="total" :page.sync="queryParams.pageNum"
+          :limit.sync="queryParams.pageSize" @pagination="getList" />
       </el-col>
     </el-row>
 
@@ -461,7 +461,7 @@ export default {
       this.getTreeselect();
       const userId = row.userId || this.ids;
       getUser(userId).then(response => {
-        this.form = response.data;
+        this.form = response.data.user;
         this.postOptions = response.data.posts;
         this.roleOptions = response.data.roles;
         this.form.postIds = response.data.postIds;
