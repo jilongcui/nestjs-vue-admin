@@ -45,10 +45,17 @@
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="序号" align="center" prop="id" width="60" />
       <el-table-column label="标题" align="center" prop="title" />
+      <el-table-column label="首页推荐" align="center" prop="recommend">
+        <template slot-scope="scope">
+          <el-tag :type="recommend_status_dict[scope.row.recommend].type">{{
+              recommend_status_dict[scope.row.recommend].label
+          }}</el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="supply" align="center" prop="supply" width="80" />
       <el-table-column label="current" align="center" prop="current" width="80" />
       <el-table-column label="deliverDelay" align="center" prop="deliverDelay" width="100" />
-      <el-table-column label="price" align="center" prop="price" width="100" />
+      <el-table-column label="价格" align="center" prop="price" width="100" />
       <el-table-column label="类型" align="center" prop="type" width="100">
         <template slot-scope="scope">
           <dict-tag :options="dict.type.activity_type" :value="scope.row.type" />
@@ -89,6 +96,7 @@
         <el-form-item label="活动标题" prop="title">
           <el-input v-model="form.title"></el-input>
         </el-form-item>
+
         <el-form-item label="封面图片" prop="coverImage">
           <image-upload v-model="form.coverImage" :limit="1">
             <el-button size="small">
@@ -97,7 +105,13 @@
             </el-button>
           </image-upload>
         </el-form-item>
-        <el-form-item label="ruleInfo" prop="ruleInfo">
+
+        <el-form-item label="首页推荐" prop="recommend">
+          <el-checkbox v-model="form.recommend">{{
+              form.recommend ? '推荐' : "不推荐"
+          }}</el-checkbox>
+        </el-form-item>
+        <el-form-item label="活动规则" prop="ruleInfo">
           <el-input type="textarea" v-model="form.ruleInfo" />
         </el-form-item>
         <el-form-item label="deliverDelay" prop="deliverDelay">
@@ -110,7 +124,7 @@
           <el-input-number controls-position="right" v-model="form.current" />
         </el-form-item>
 
-        <el-form-item label="price" prop="price">
+        <el-form-item label="价格" prop="price">
           <el-input-number controls-position="right" v-model="form.price" />
         </el-form-item>
         <el-form-item label="活动时间" prop="timeRange">
@@ -128,7 +142,7 @@
             </el-form-item>
           </el-col>
           <el-col :offset="2" :span="11">
-            <el-form-item label="status" prop="status">
+            <el-form-item label="状态" prop="status">
               <el-select v-model="form.status" placeholder="请选择活动状态">
                 <el-option v-for="dict in dict.type.activity_status" :key="dict.value" :label="dict.label"
                   :value="dict.value"></el-option>
@@ -136,11 +150,20 @@
             </el-form-item>
           </el-col>
         </el-row>
-        <el-form-item v-if="enableEditCollections" label="活动藏品" prop="timeRange">
-          <el-row>
-            <el-col :span="12" v-for="c in currentCollections" :key="c.id">
-              <div style="padding: 6px">
 
+        <el-form-item label="作者">
+
+          <div v-if="form.authorName" style="display: flex; align-items: center;">
+            <img v-if="form.avatar" :src="baseUrl + form.avatar"
+              style="width: 40px;height: 40px; border-radius: 20px; margin-right: 4px;" />
+            <span>{{ form.authorName }}</span>
+          </div>
+          <div v-else style="color: red;">请选择藏品</div>
+        </el-form-item>
+        <el-form-item v-if="enableEditCollections" label="活动藏品" prop="collections">
+          <el-row>
+            <el-col :span="12" v-for="c in form.collections" :key="c.id">
+              <div style="padding: 6px">
                 <ActivityCollectionItem :item="c" v-on:remove="handleRemoveCollection(c)" />
               </div>
             </el-col>
@@ -182,7 +205,11 @@ const DEFAULT_FORM = {
   deliverDelay: undefined,
   contractId: undefined,
   type: undefined,
-  status: undefined
+  recommend: false,
+  status: undefined,
+  authorName: undefined,
+  avatar: undefined,
+  collections: undefined,
 }
 
 export default {
@@ -194,6 +221,19 @@ export default {
   },
   data() {
     return {
+      baseUrl: process.env.VUE_APP_BASE_API,
+      recommend_status_dict: {
+        1: {
+          label: "是",
+          value: "1",
+          type: 'success'
+        },
+        0: {
+          label: "否",
+          value: "0",
+          type: 'danger'
+        },
+      },
       // 遮罩层
       loading: true,
       // 选中数组
@@ -215,7 +255,7 @@ export default {
       // 表单中是否允许编辑活动内的藏品(新增活动表单不允许，修改活动表单允许)
       enableEditCollections: false,
       // 当前活动的藏品
-      currentCollections: [],
+      // currentCollections: [],
       // 查询参数
       queryParams: {
         pageNum: 1,
@@ -259,6 +299,9 @@ export default {
         ],
         timeRange: [
           { required: true, message: "活动时间不能为空" }
+        ],
+        collections: [
+          { required: true, message: "藏品不能为空" }
         ],
       }
     };
@@ -318,12 +361,13 @@ export default {
       this.reset();
       const id = row.id || this.ids
       getActivityDetailsById(id).then(response => {
-        const { startTime, endTime, collections, ...reset } = response.data
+        const { startTime, endTime, recommend, ...reset } = response.data
         this.form = {
           ...reset,
+          recommend: recommend === "1" ? true : false,
           timeRange: [startTime, endTime]
         }
-        this.currentCollections = collections;
+        // this.currentCollections = collections;
         this.open = true;
         this.title = "修改活动";
       });
@@ -335,9 +379,10 @@ export default {
       this.$refs["form"].validate(valid => {
         console.log(valid)
         if (valid) {
-          const { timeRange, ...reset } = this.form
+          const { timeRange, recommend, ...reset } = this.form
           const data = {
             ...reset,
+            recommend: recommend ? "1" : '0',
             startTime: timeRange[0],
             endTime: timeRange[1],
           }
@@ -371,7 +416,10 @@ export default {
       if (this.form.id != undefined && c.id !== undefined) {
         removeCollectionFromActivity(this.form.id, c.id).then(response => {
           this.$modal.msgSuccess("删除成功");
-          this.currentCollections = this.currentCollections.filter((item) => item.id !== c.id)
+          this.form.collections = this.form.collections.filter((item) => item.id !== c.id)
+
+          this.form.avatar = undefined
+          this.form.authorName = undefined
         });
       }
     },
@@ -379,7 +427,10 @@ export default {
       if (this.form.id != undefined && c.id !== undefined) {
         appendCollectionToActivity(this.form.id, c.id).then(response => {
           this.$modal.msgSuccess("添加成功");
-          this.currentCollections = [...this.currentCollections, c]
+          this.form.collections = [...this.form.collections, c]
+
+          this.form.avatar = c.author.avatar
+          this.form.authorName = c.author.nickName
         });
       }
     }
