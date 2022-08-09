@@ -146,3 +146,42 @@ export function removeCollectionFromActivity(activityId, collectionId) {
     method: "delete",
   });
 }
+
+/**
+ * 设置活动开始
+ *
+ * @param {string | number} activityId
+ * @returns
+ */
+export function setActivityStart(activityId) {
+  return request({
+    url: `/activity/${activityId}/start`,
+    method: "put",
+  });
+}
+
+/**
+ * 设置活动开始
+ *
+ * @param {string | number} activityId
+ * @returns
+ */
+export function setActivityEnd(activityId) {
+  return request({
+    url: `/activity/${activityId}/finish`,
+    method: "put",
+  });
+}
+
+/**
+ * 设置活动藏品售罄
+ *
+ * @param {string | number} activityId
+ * @returns
+ */
+export function setActivitySellOut(activityId) {
+  return request({
+    url: `/activity/${activityId}/sellOut`,
+    method: "put",
+  });
+}

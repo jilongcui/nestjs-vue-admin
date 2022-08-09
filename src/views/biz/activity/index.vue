@@ -45,16 +45,15 @@
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="序号" align="center" prop="id" width="60" />
       <el-table-column label="标题" align="center" prop="title" />
-      <el-table-column label="首页推荐" align="center" prop="recommend">
+      <el-table-column label="置顶" align="center" prop="top">
         <template slot-scope="scope">
-          <el-tag :type="recommend_status_dict[scope.row.recommend].type">{{
-              recommend_status_dict[scope.row.recommend].label
+          <el-tag :type="top_status_dict[scope.row.top].type">{{
+              top_status_dict[scope.row.top].label
           }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="supply" align="center" prop="supply" width="80" />
       <el-table-column label="current" align="center" prop="current" width="80" />
-      <el-table-column label="deliverDelay" align="center" prop="deliverDelay" width="100" />
       <el-table-column label="价格" align="center" prop="price" width="100" />
       <el-table-column label="类型" align="center" prop="type" width="100">
         <template slot-scope="scope">
@@ -77,12 +76,29 @@
           <span>{{ parseTime(scope.row.createTime) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+      <el-table-column label="操作" align="center" width="240" class-name="small-padding fixed-width">
         <template slot-scope="scope">
-          <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)"
-            v-hasPermi="['system:notice:edit']">修改</el-button>
-          <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)"
-            v-hasPermi="['system:notice:remove']">删除</el-button>
+          <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)">修改</el-button>
+          <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)">删除</el-button>
+          <el-dropdown :hide-on-click="false" @command="handleActivityStatusCommand">
+            <span class="el-dropdown-link">
+              更改状态<i class="el-icon-arrow-down el-icon--right"></i>
+            </span>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item :command="{
+                name: 'start',
+                payload: scope.row,
+              }">活动开始</el-dropdown-item>
+              <el-dropdown-item :command="{
+                name: 'sellOut',
+                payload: scope.row,
+              }">藏品售罄</el-dropdown-item>
+              <el-dropdown-item :command="{
+                name: 'end',
+                payload: scope.row,
+              }">活动结束</el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
         </template>
       </el-table-column>
     </el-table>
@@ -106,16 +122,13 @@
           </image-upload>
         </el-form-item>
 
-        <el-form-item label="首页推荐" prop="recommend">
-          <el-checkbox v-model="form.recommend">{{
-              form.recommend ? '推荐' : "不推荐"
+        <el-form-item label="置顶" prop="top">
+          <el-checkbox v-model="form.top">{{
+              form.top ? "已置顶" : "不置顶"
           }}</el-checkbox>
         </el-form-item>
         <el-form-item label="活动规则" prop="ruleInfo">
           <el-input type="textarea" v-model="form.ruleInfo" />
-        </el-form-item>
-        <el-form-item label="deliverDelay" prop="deliverDelay">
-          <el-input-number controls-position="right" v-model="form.deliverDelay" />
         </el-form-item>
         <el-form-item label="supply" prop="supply">
           <el-input-number controls-position="right" v-model="form.supply" />
@@ -141,24 +154,19 @@
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :offset="2" :span="11">
-            <el-form-item label="状态" prop="status">
-              <el-select v-model="form.status" placeholder="请选择活动状态">
-                <el-option v-for="dict in dict.type.activity_status" :key="dict.value" :label="dict.label"
-                  :value="dict.value"></el-option>
-              </el-select>
-            </el-form-item>
-          </el-col>
         </el-row>
 
-        <el-form-item label="作者">
-
-          <div v-if="form.authorName" style="display: flex; align-items: center;">
-            <img v-if="form.avatar" :src="baseUrl + form.avatar"
-              style="width: 40px;height: 40px; border-radius: 20px; margin-right: 4px;" />
+        <el-form-item label="作者"  v-if="enableEditCollections">
+          <div v-if="form.authorName" style="display: flex; align-items: center">
+            <img v-if="form.avatar" :src="baseUrl + form.avatar" style="
+                width: 40px;
+                height: 40px;
+                border-radius: 20px;
+                margin-right: 4px;
+              " />
             <span>{{ form.authorName }}</span>
           </div>
-          <div v-else style="color: red;">请选择藏品</div>
+          <div v-else style="color: red">请选择藏品</div>
         </el-form-item>
         <el-form-item v-if="enableEditCollections" label="活动藏品" prop="collections">
           <el-row>
@@ -173,9 +181,7 @@
               </div>
             </el-col>
           </el-row>
-
         </el-form-item>
-
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
@@ -187,10 +193,16 @@
 
 <script>
 import {
-  getActivityList, getActivityDetailsById,
+  getActivityList,
+  getActivityDetailsById,
   deleteActivityByIds,
-  appendCollectionToActivity, removeCollectionFromActivity,
-  updateActivity, addActivity
+  appendCollectionToActivity,
+  removeCollectionFromActivity,
+  updateActivity,
+  addActivity,
+  setActivityStart,
+  setActivityEnd,
+  setActivitySellOut
 } from "@/api/activity";
 import ActivityCollectionItem from "./components/ActivityCollectionItem.vue";
 import AddActivityCollectionItem from "./components/AddActivityCollectionItem.vue";
@@ -202,36 +214,34 @@ const DEFAULT_FORM = {
   supply: undefined,
   current: undefined,
   price: undefined,
-  deliverDelay: undefined,
   contractId: undefined,
   type: undefined,
-  recommend: false,
-  status: undefined,
+  top: false,
   authorName: undefined,
   avatar: undefined,
   collections: undefined,
-}
+};
 
 export default {
   name: "Activity",
-  dicts: ['activity_status', 'activity_type'],
+  dicts: ["activity_status", "activity_type"],
   components: {
     ActivityCollectionItem,
-    AddActivityCollectionItem
+    AddActivityCollectionItem,
   },
   data() {
     return {
       baseUrl: process.env.VUE_APP_BASE_API,
-      recommend_status_dict: {
+      top_status_dict: {
         1: {
           label: "是",
           value: "1",
-          type: 'success'
+          type: "success",
         },
         0: {
           label: "否",
           value: "0",
-          type: 'danger'
+          type: "danger",
         },
       },
       // 遮罩层
@@ -266,44 +276,20 @@ export default {
       },
       // 表单参数
       form: {
-        ...DEFAULT_FORM
+        ...DEFAULT_FORM,
       },
       // 表单校验
       rules: {
-        title: [
-          { required: true, message: "活动标题不能为空" }
-        ],
-        coverImage: [
-          { required: true, message: "活动封面不能为空" }
-        ],
-        ruleInfo: [
-          { required: true, message: "规则不能为空" }
-        ],
-        supply: [
-          { required: true, message: "supply不能为空" }
-        ],
-        current: [
-          { required: true, message: "current不能为空" }
-        ],
-        price: [
-          { required: true, message: "price不能为空" }
-        ],
-        deliverDelay: [
-          { required: true, message: "deliverDelay不能为空" }
-        ],
-        type: [
-          { required: true, message: "type不能为空", trigger: "change" }
-        ],
-        status: [
-          { required: true, message: "status不能为空", trigger: "change" }
-        ],
-        timeRange: [
-          { required: true, message: "活动时间不能为空" }
-        ],
-        collections: [
-          { required: true, message: "藏品不能为空" }
-        ],
-      }
+        title: [{ required: true, message: "活动标题不能为空" }],
+        coverImage: [{ required: true, message: "活动封面不能为空" }],
+        ruleInfo: [{ required: true, message: "规则不能为空" }],
+        supply: [{ required: true, message: "supply不能为空" }],
+        current: [{ required: true, message: "current不能为空" }],
+        price: [{ required: true, message: "price不能为空" }],
+        type: [{ required: true, message: "type不能为空", trigger: "change" }],
+        timeRange: [{ required: true, message: "活动时间不能为空" }],
+        collections: [{ required: true, message: "藏品不能为空" }],
+      },
     };
   },
   created() {
@@ -313,7 +299,7 @@ export default {
     /** 查询列表 */
     getList() {
       this.loading = true;
-      getActivityList(this.queryParams).then(response => {
+      getActivityList(this.queryParams).then((response) => {
         this.activityList = response.data.rows;
         this.total = response.data.total;
         this.loading = false;
@@ -327,7 +313,7 @@ export default {
     // 表单重置
     reset() {
       this.form = {
-        ...DEFAULT_FORM
+        ...DEFAULT_FORM,
       };
       this.resetForm("form");
     },
@@ -343,9 +329,9 @@ export default {
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.ids = selection.map(item => item.id)
-      this.single = selection.length != 1
-      this.multiple = !selection.length
+      this.ids = selection.map((item) => item.id);
+      this.single = selection.length != 1;
+      this.multiple = !selection.length;
     },
     /** 新增按钮操作 */
     handleAdd() {
@@ -359,14 +345,14 @@ export default {
     handleUpdate(row) {
       this.enableEditCollections = true;
       this.reset();
-      const id = row.id || this.ids
-      getActivityDetailsById(id).then(response => {
-        const { startTime, endTime, recommend, ...reset } = response.data
+      const id = row.id || this.ids;
+      getActivityDetailsById(id).then((response) => {
+        const { startTime, endTime, top, ...reset } = response.data;
         this.form = {
           ...reset,
-          recommend: recommend === "1" ? true : false,
-          timeRange: [startTime, endTime]
-        }
+          top: top === "1" ? true : false,
+          timeRange: [startTime, endTime],
+        };
         // this.currentCollections = collections;
         this.open = true;
         this.title = "修改活动";
@@ -375,25 +361,25 @@ export default {
     /** 提交按钮 */
 
     submitForm: function () {
-      console.log(this.form)
-      this.$refs["form"].validate(valid => {
-        console.log(valid)
+      console.log(this.form);
+      this.$refs["form"].validate((valid) => {
+        console.log(valid);
         if (valid) {
-          const { timeRange, recommend, ...reset } = this.form
+          const { timeRange, top, ...reset } = this.form;
           const data = {
             ...reset,
-            recommend: recommend ? "1" : '0',
+            top: top ? "1" : "0",
             startTime: timeRange[0],
             endTime: timeRange[1],
-          }
+          };
           if (this.form.id != undefined) {
-            updateActivity(data, this.form.id).then(response => {
+            updateActivity(data, this.form.id).then((response) => {
               this.$modal.msgSuccess("修改成功");
               this.open = false;
               this.getList();
             });
           } else {
-            addActivity(data).then(response => {
+            addActivity(data).then((response) => {
               this.$modal.msgSuccess("新增成功");
               this.open = false;
               this.getList();
@@ -404,36 +390,75 @@ export default {
     },
     /** 删除按钮操作 */
     handleDelete(row) {
-      const ids = row.id || this.ids
-      this.$modal.confirm('是否确认删除编号为"' + ids + '"的活动项？').then(function () {
-        return deleteActivityByIds(ids);
-      }).then(() => {
-        this.getList();
-        this.$modal.msgSuccess("删除成功");
-      }).catch(() => { });
+      const ids = row.id || this.ids;
+      this.$modal
+        .confirm('是否确认删除编号为"' + ids + '"的活动项？')
+        .then(function () {
+          return deleteActivityByIds(ids);
+        })
+        .then(() => {
+          this.getList();
+          this.$modal.msgSuccess("删除成功");
+        })
+        .catch(() => { });
     },
+    /**
+     * 移除藏品
+     * @param {*} c
+     */
     handleRemoveCollection(c) {
       if (this.form.id != undefined && c.id !== undefined) {
-        removeCollectionFromActivity(this.form.id, c.id).then(response => {
+        removeCollectionFromActivity(this.form.id, c.id).then((response) => {
           this.$modal.msgSuccess("删除成功");
-          this.form.collections = this.form.collections.filter((item) => item.id !== c.id)
+          this.form.collections = this.form.collections.filter(
+            (item) => item.id !== c.id
+          );
 
-          this.form.avatar = undefined
-          this.form.authorName = undefined
+          this.form.avatar = undefined;
+          this.form.authorName = undefined;
         });
       }
     },
+    /**
+     * 添加藏品
+     * @param {*} c
+     */
     handleAddCollection(c) {
       if (this.form.id != undefined && c.id !== undefined) {
-        appendCollectionToActivity(this.form.id, c.id).then(response => {
+        appendCollectionToActivity(this.form.id, c.id).then((response) => {
           this.$modal.msgSuccess("添加成功");
-          this.form.collections = [...this.form.collections, c]
+          this.form.collections = [...this.form.collections, c];
 
-          this.form.avatar = c.author.avatar
-          this.form.authorName = c.author.nickName
+          this.form.avatar = c.author.avatar;
+          this.form.authorName = c.author.nickName;
         });
       }
-    }
-  }
+    },
+
+    /**
+     * 设置活动状态：活动开始
+     * @param {*} activity
+     */
+    async handleActivityStatusCommand({ name, payload }) {
+      try {
+
+        switch (name) {
+          case 'start':
+            await setActivityStart(payload.id)
+            break;
+          case 'end':
+            await setActivityEnd(payload.id)
+            break;
+          case 'sellOut':
+            await setActivitySellOut(payload.id)
+            break;
+        }
+        this.$modal.msgSuccess("操作成功");
+        this.getList()
+      } catch (error) {
+        console.error(error);
+      }
+    },
+  },
 };
 </script>
