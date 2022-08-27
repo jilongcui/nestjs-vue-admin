@@ -4,7 +4,6 @@
 
 
       <el-form-item label="状态" prop="status">
-
         <el-select v-model="queryParams.status" placeholder="请选择状态">
           <el-option v-for="dict in dict.type.order_status" :key="dict.value" :label="dict.label" :value="dict.value">
           </el-option>

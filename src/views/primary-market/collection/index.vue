@@ -35,11 +35,6 @@
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="序号" align="center" prop="id" width="60" />
       <el-table-column label="名称" align="center" prop="name" />
-      <!-- <el-table-column label="公告类型" align="center" prop="addressType" width="100">
-        <template slot-scope="scope">
-          <dict-tag :options="dict.type.sys_address_type" :value="scope.row.addressType" />
-        </template>
-      </el-table-column> -->
       <el-table-column label="supply" align="center" prop="supply" width="90" />
       <el-table-column label="current" align="center" prop="current" width="90" />
       <el-table-column label="状态" align="center" prop="status" width="100">
