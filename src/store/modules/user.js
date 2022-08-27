@@ -64,7 +64,7 @@ const user = {
             const avatar =
               user.avatar == "" || user.avatar == null
                 ? require("@/assets/images/profile.jpeg")
-                : process.env.VUE_APP_BASE_API + user.avatar;
+                : user.avatar;
             if (res.data.roles && res.data.roles.length > 0) {
               // 验证返回的roles是否是一个非空数组
               commit("SET_ROLES", res.data.roles);

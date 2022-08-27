@@ -59,6 +59,7 @@ export default {
     }
   },
   data() {
+    console.log('store:',store)
     return {
       // 是否显示弹出层
       open: false,
@@ -120,7 +121,7 @@ export default {
         formData.append("avatarfile", data);
         uploadAvatar(formData).then(response => {
           this.open = false;
-          this.options.img = process.env.VUE_APP_BASE_API + response.data.imgUrl;
+          this.options.img = response.data.imgUrl;
           store.commit('SET_AVATAR', this.options.img);
           this.$modal.msgSuccess("修改成功");
           this.visible = false;

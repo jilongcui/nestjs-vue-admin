@@ -84,7 +84,7 @@
           </el-col>
           <el-col :span="24">
             <el-form-item label="desc" prop="desc">
-              <el-input type="textarea" v-model="form.desc" placeholder="请输入" />
+              <editor v-model="form.desc" :min-height="192" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
