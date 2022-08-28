@@ -82,14 +82,13 @@
 import {
   getOrderList,
   deleteOrdernByIds,
-  getOrderDetailsById
 } from "@/api/order";
 import { mapGetters } from "vuex";
 
 
 
 export default {
-  name: "Ordern",
+  name: "SecondaryMarketOrderManagement",
   dicts: ['order_status'],
   data() {
     return {

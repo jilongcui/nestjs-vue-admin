@@ -1,9 +1,9 @@
 {
   "name": "nestjs-vue-admin",
   "version": "3.8.0",
-  "description": "爱芯管理系统",
+  "description": "startland管理系统",
   "author": "jilongcui@163.com",
-  "proxy": "http://47.102.218.158:3000",
+  "proxy": "https://www.startland.top",
   "license": "MIT",
   "scripts": {
     "dev": "vue-cli-service serve",

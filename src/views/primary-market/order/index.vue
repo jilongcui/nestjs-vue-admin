@@ -93,7 +93,7 @@ import { mapGetters } from "vuex";
 
 
 export default {
-  name: "Ordern",
+  name: "PrimaryMarketOrderManagement",
   dicts: ['order_status'],
   data() {
     return {
