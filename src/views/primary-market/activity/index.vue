@@ -1,12 +1,6 @@
 <template>
   <div class="app-container">
-    <!-- <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="地址" prop="address">
-        <el-input v-model="queryParams.address" placeholder="请输入地址" clearable @keyup.enter.native="handleQuery" />
-      </el-form-item>
-      <el-form-item label="用户ID" prop="userId">
-        <el-input v-model="queryParams.userId" placeholder="请输入用户ID" clearable @keyup.enter.native="handleQuery" />
-      </el-form-item>
+    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
       <el-form-item label="状态" prop="type">
         <el-select v-model="queryParams.status" placeholder="活动状态" clearable>
           <el-option v-for="dict in dict.type.activity_status" :key="dict.value" :label="dict.label"
@@ -23,7 +17,7 @@
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
       </el-form-item>
-    </el-form> -->
+    </el-form>
 
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
@@ -113,6 +107,17 @@
           <el-input v-model="form.title"></el-input>
         </el-form-item>
 
+        <el-row>
+          <el-col :span="11">
+            <el-form-item label="活动类型" prop="type">
+              <el-select v-model="form.type" placeholder="请选择活动类型">
+                <el-option v-for="dict in dict.type.activity_type" :key="dict.value" :label="dict.label"
+                  :value="dict.value"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
         <el-form-item label="封面图片" prop="coverImage">
           <image-upload v-model="form.coverImage" :limit="1">
             <el-button size="small">
@@ -145,18 +150,8 @@
             end-placeholder="结束时间">
           </el-date-picker>
         </el-form-item>
-        <el-row>
-          <el-col :span="11">
-            <el-form-item label="活动类型" prop="type">
-              <el-select v-model="form.type" placeholder="请选择活动类型">
-                <el-option v-for="dict in dict.type.activity_type" :key="dict.value" :label="dict.label"
-                  :value="dict.value"></el-option>
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
 
-        <el-form-item label="作者"  v-if="enableEditCollections">
+        <el-form-item label="作者" v-if="enableEditCollections">
           <div v-if="form.authorName" style="display: flex; align-items: center">
             <img v-if="form.avatar" :src="baseUrl + form.avatar" style="
                 width: 40px;
