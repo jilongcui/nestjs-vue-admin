@@ -5,7 +5,7 @@ import request from "@/utils/request";
  *
  * @param {{
  *    type: "1" | "2" | "3"; // 类型 1:银行卡 2:微信 3:支付宝
- *    id: string | number; 
+ *    id: string | number;
  *    pageNum?: number; // 当前页
  *    pageSize?: number; // 每页条数
  *    withdrawByColumn?: string; // 排序字段
@@ -16,8 +16,26 @@ import request from "@/utils/request";
  */
 export function getWithdrawList(params) {
   return request({
-    url: "/fund/withdraw/list",
+    url: "/withdraw/list",
     method: "get",
     params,
+  });
+}
+
+/**
+ * 提现审核
+ * @param {string | number} withdrawId
+ * @returns
+ */
+export function confirmWithdraw(withdrawId) {
+  return request({
+    url: "/withdraw/confirm",
+    method: "post",
+    headers: {
+      isToken: true,
+    },
+    data: {
+      withdrawId,
+    },
   });
 }

@@ -6,22 +6,15 @@
       <el-form-item label="状态" prop="status">
 
         <el-select v-model="queryParams.status" placeholder="请选择状态">
-          <el-option v-for="dict in dict.type.order_status" :key="dict.value" :label="dict.label" :value="dict.value">
+          <el-option v-for="dict in dict.type.withdraw_status" :key="dict.value" :label="dict.label"
+            :value="dict.value">
           </el-option>
         </el-select>
       </el-form-item>
-      <el-form-item label="订单ID" prop="id">
-        <el-input v-model="queryParams.id" placeholder="请输入订单ID" clearable @keyup.enter.native="handleQuery" />
+      <el-form-item label="ID" prop="id">
+        <el-input v-model="queryParams.id" placeholder="请输入ID" clearable @keyup.enter.native="handleQuery" />
       </el-form-item>
-      <el-form-item label="商品名称" prop="desc">
-        <el-input v-model="queryParams.desc" placeholder="请输入商品名称" clearable @keyup.enter.native="handleQuery" />
-      </el-form-item>
-      <el-form-item label="活动ID" prop="activityId">
-        <el-input v-model="queryParams.activityId" placeholder="请输入活动ID" clearable @keyup.enter.native="handleQuery" />
-      </el-form-item>
-      <el-form-item label="用户ID" prop="userId">
-        <el-input v-model="queryParams.userId" placeholder="请输入用户ID" clearable @keyup.enter.native="handleQuery" />
-      </el-form-item>
+
 
 
       <el-form-item>
@@ -41,25 +34,23 @@
 
     <el-table v-loading="loading" :data="dataSource">
       <el-table-column label="ID" align="center" prop="id" width="70" />
-      <el-table-column label="活动商品" align="left" width="160">
+      <el-table-column label="merchBatchNo" align="center" prop="merchBatchNo" width="120" />
+      <el-table-column label="merchBillNo" align="center" prop="merchBillNo" width="120" />
+      <el-table-column label="用户" align="left" width="160">
         <template slot-scope="scope">
           <div style="display:flex; align-items: center">
-            <img style="width: 60px; height: 40px; object-fit: cover; display: block; margin-right: 6px;"
-              :src="scope.row.activity.coverImage" />
-            <div style="text-align: left;">
-              <div style="font-size: 14px; line-height: 20px;">{{ scope.row.desc }}</div>
-              <div style="font-size: 12px; line-height:20px;">x {{ scope.row.count }}
-              </div>
-            </div>
+            <img style="width: 30px; height: 30px; object-fit: cover; display: block; margin-right: 6px;"
+              :src="scope.row.user.avatar" />
+            <div style="font-size: 14px; line-height: 20px;">{{ scope.row.user.nickName }}</div>
           </div>
         </template>
       </el-table-column>
       <el-table-column label="总价格" align="center" prop="totalPrice" />
-      <el-table-column label="实际价格" align="center" prop="realPrice" />
+      <el-table-column label="手续费" align="center" prop="totalFee" />
 
-      <el-table-column label="订单状态" align="center" prop="status" width="100">
+      <el-table-column label="状态" align="center" prop="status" width="100">
         <template slot-scope="scope">
-          <dict-tag :options="dict.type.order_status" :value="scope.row.status" />
+          <dict-tag :options="dict.type.withdraw_status" :value="scope.row.status" />
         </template>
       </el-table-column>
       <el-table-column label="创建时间" align="center" prop="createTime" width="150">
@@ -68,9 +59,15 @@
         </template>
       </el-table-column>
 
-      <el-table-column label="失效时间" align="center" prop="invalidTime" width="150">
+
+      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
-          <span>{{ new Date(scope.row.invalidTime).toLocaleString() }}</span>
+          <div style="display: flex; align-items: center;justify-content: center;">
+            <el-button v-if="scope.row.status === '0'" size="mini" type="text" @click="handleConfirm(scope.row)">通过
+            </el-button>
+            <el-button v-if="scope.row.status === '0'" size="mini" type="text" @click="handleReject(scope.row)">拒绝
+            </el-button>
+          </div>
         </template>
       </el-table-column>
     </el-table>
@@ -84,6 +81,7 @@
 <script>
 import {
   getWithdrawList,
+  confirmWithdraw
 } from "@/api/account/withdraw";
 import { mapGetters } from "vuex";
 
@@ -91,7 +89,7 @@ import { mapGetters } from "vuex";
 
 export default {
   name: "WithdrawRecord",
-  dicts: ['order_status'],
+  dicts: ['withdraw_status'],
   data() {
     return {
       // 遮罩层
@@ -111,7 +109,6 @@ export default {
 
         pageNum: 1,
         pageSize: 10,
-        type: "0",
         status: undefined
       },
       dataSource: [],
@@ -146,6 +143,24 @@ export default {
     resetQuery() {
       this.resetForm("queryForm");
       this.handleQuery();
+    },
+    async handleConfirm(data) {
+      if (window.confirm('确定要通过此提现申请吗？')) {
+        console.log(data)
+        try {
+          await confirmWithdraw(data.id)
+          this.$modal.msgSuccess("审核成功");
+          this.handleQuery();
+        } catch (error) {
+          console.error(error)
+          // this.$modal.msgError(error);
+        }
+      }
+    },
+    handleReject(data) {
+      if (window.confirm('确定要拒绝此提现申请吗？')) {
+        this.handleQuery();
+      }
     },
 
   }
