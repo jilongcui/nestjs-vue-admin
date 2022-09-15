@@ -39,3 +39,19 @@ export function confirmWithdraw(withdrawId) {
     },
   });
 }
+
+/**
+ * 拒绝提现申请
+ *
+ * @param {string | number} withdrawId
+ * @returns
+ */
+export function rejectWithdraw(withdrawId) {
+  return request({
+    url: "/withdraw/" + withdrawId + "/fail",
+    method: "put",
+    headers: {
+      isToken: true,
+    },
+  });
+}

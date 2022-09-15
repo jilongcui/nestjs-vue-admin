@@ -45,8 +45,9 @@
           </div>
         </template>
       </el-table-column>
-      <el-table-column label="总价格" align="center" prop="totalPrice" />
+      <el-table-column label="总金额" align="center" prop="totalPrice" />
       <el-table-column label="手续费" align="center" prop="totalFee" />
+      <el-table-column label="到账金额" align="center" prop="realPrice" />
 
       <el-table-column label="状态" align="center" prop="status" width="100">
         <template slot-scope="scope">
@@ -81,7 +82,8 @@
 <script>
 import {
   getWithdrawList,
-  confirmWithdraw
+  confirmWithdraw,
+  rejectWithdraw
 } from "@/api/account/withdraw";
 import { mapGetters } from "vuex";
 
@@ -157,9 +159,16 @@ export default {
         }
       }
     },
-    handleReject(data) {
+    async handleReject(data) {
       if (window.confirm('确定要拒绝此提现申请吗？')) {
-        this.handleQuery();
+        try {
+          await rejectWithdraw(data.id)
+          this.$modal.msgSuccess("审核成功");
+          this.handleQuery();
+        } catch (error) {
+          console.error(error)
+
+        }
       }
     },
 
