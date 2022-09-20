@@ -1,10 +1,7 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
-
-
       <el-form-item label="状态" prop="status">
-
         <el-select v-model="queryParams.status" placeholder="请选择状态">
           <el-option v-for="dict in dict.type.withdraw_status" :key="dict.value" :label="dict.label"
             :value="dict.value">
@@ -14,8 +11,6 @@
       <el-form-item label="ID" prop="id">
         <el-input v-model="queryParams.id" placeholder="请输入ID" clearable @keyup.enter.native="handleQuery" />
       </el-form-item>
-
-
 
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
