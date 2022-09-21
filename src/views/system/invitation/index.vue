@@ -5,8 +5,8 @@
         <el-input v-model="queryParams.userName" placeholder="请输入用户名称" clearable style="width: 240px"
           @keyup.enter.native="handleQuery" />
       </el-form-item>
-      <el-form-item label="手机号码" prop="phonenumber">
-        <el-input v-model="queryParams.phonenumber" placeholder="请输入手机号码" clearable style="width: 240px"
+      <el-form-item label="手机号码" prop="phoneNumber">
+        <el-input v-model="queryParams.phoneNumber" placeholder="请输入手机号码" clearable style="width: 240px"
           @keyup.enter.native="handleQuery" />
       </el-form-item>
       <el-form-item label="创建时间">
@@ -72,6 +72,7 @@ export default {
       queryParams: {
         userName: undefined,
         phonenumber: undefined,
+        level: undefined,
       },
 
     };
@@ -86,7 +87,20 @@ export default {
     /** 查询列表 */
     getList() {
       this.loading = true;
-      inviteTree(this.addDateRange(this.queryParams, this.dateRange)).then(res => {
+
+      const params = { ...this.queryParams }
+      if (this.dateRange && this.dateRange.length === 2) {
+        params['params[beginTime]'] = this.dateRange[0]
+        params['params[endTime]'] = this.dateRange[1]
+      }
+
+      for (const key in params) {
+        if (typeof params[key] === "undefined" || params[key] === null || params[key] === "") {
+          delete params[key]
+        }
+      }
+
+      inviteTree(params).then(res => {
         if (res.code === 200) {
 
           this.dataList = res.data
