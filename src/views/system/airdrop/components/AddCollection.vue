@@ -132,10 +132,8 @@ export default {
         },
         choose(c) {
             if (!c) return
-            this.$modal.confirm(`确定要添加这个藏品吗？`).then(() => {
-                this.$emit('add', c)
-                this.open = false
-            })
+            this.$emit('add', c)
+            this.open = false
         }
     }
 };

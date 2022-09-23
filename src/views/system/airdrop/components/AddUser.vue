@@ -1,21 +1,19 @@
 <template>
     <div>
-        <div class="add-button" @click="openCollectionSelector">
-            <i class="el-icon-plus" style="font-size: 36px;"></i>
-            <p class="text">添加藏品</p>
+        <div v-if="value">
+            <div style="display: flex; align-items:center; ">
+                <img :src="value.avatar" style="width:32px; height:32px; border-radius: 50%; display: block; margin-right:4px;" />
+                <span>{{ value.nickName }}</span>
+            </div>
+            <el-button size="mini" @click="openCollectionSelector">重新选择</el-button>
         </div>
+        <el-button v-else @click="openCollectionSelector">选择用户</el-button>
         <el-dialog title="选择藏品" :visible.sync="open" width="780px" append-to-body>
             <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch"
                 label-width="68px">
-                <el-form-item label="名称" prop="name">
-                    <el-input v-model="queryParams.name" placeholder="请输入藏品名称" clearable
+                <el-form-item label="名称" prop="userId">
+                    <el-input v-model="queryParams.userId" placeholder="请输入用户ID" clearable
                         @keyup.enter.native="handleQuery" />
-                </el-form-item>
-
-                <el-form-item label="合约" prop="contractId">
-                    <el-select v-model="queryParams.contractId" placeholder="请选择合约" clearable>
-                        <el-option v-for="c in contractList" :key="c.id" :label="c.chain" :value="c.id" />
-                    </el-select>
                 </el-form-item>
                 <el-form-item>
                     <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
@@ -23,25 +21,9 @@
                 </el-form-item>
             </el-form>
             <el-table v-loading="loading" :data="dataSource">
-                <el-table-column label="序号" align="center" prop="id" width="60" />
-                <el-table-column label="名称" align="center" prop="name" />
-
-                <el-table-column label="supply" align="center" prop="supply" width="90" />
-                <el-table-column label="current" align="center" prop="current" width="90" />
-                <el-table-column label="状态" align="center" prop="status" width="100">
-                    <template slot-scope="scope">
-                        <dict-tag :options="dict.type.collection_status" :value="scope.row.status" />
-                    </template>
-                </el-table-column>
-                <el-table-column label="author" align="center" prop="author" width="160">
-                    <template slot-scope="scope">
-                        <span>{{ scope.row.author.nickName }}</span>
-                    </template>
-                </el-table-column>
-                <el-table-column label="contract" align="center" prop="contract" width="160">
-                    <template slot-scope="scope">
-                        <span>{{ scope.row.contract.chain }}</span>
-                    </template>
+                <el-table-column label="userId" align="center" prop="userId" width="60" />
+                <el-table-column label="userName" align="center" prop="userName" />
+                <el-table-column label="nickName" align="center" prop="nickName" width="160">
                 </el-table-column>
 
                 <el-table-column label="操作" fixed="right" align="right">
@@ -60,14 +42,14 @@
 
 <script>
 
-import {
-    getCollectionList,
-} from "@/api/collection";
-
-import { getContractList } from "@/api/contract";
+import { listUser } from "@/api/system/user";
 export default {
-    name: "AddActivityCollectionItem",
-    dicts: ['collection_status'],
+    name: "AddUser",
+    props: ['value'],
+    model: {
+        prop: "value", //绑定的值，通过父组件传递
+        event: "update" //自定义时间名
+    },
     data() {
         return {
             // 遮罩层
@@ -85,21 +67,16 @@ export default {
             // 总条数
             total: 0,
             dataSource: [],
-            contractList: [],
         }
     },
     created() {
-        getContractList({ pageNum: 1, pageSize: 999 }).then(res => {
-            if (res.code === 200) {
-                this.contractList = res.data.rows
-            }
-        })
+        console.log(this.value)
     },
     methods: {
         /** 查询列表 */
         getList() {
             this.loading = true;
-            getCollectionList(this.queryParams).then(res => {
+            listUser(this.queryParams).then(res => {
                 if (res.code === 200) {
                     this.dataSource = res.data.rows
                     this.total = res.data.total;
@@ -130,12 +107,10 @@ export default {
             this.open = false;
             this.resetForm("queryForm");
         },
-        choose(c) {
-            if (!c) return
-            this.$modal.confirm(`确定要添加这个藏品吗？`).then(() => {
-                this.$emit('add', c)
-                this.open = false
-            })
+        choose(user) {
+            if (!user) return
+            this.$emit('update', user)
+            this.open = false
         }
     }
 };
@@ -147,7 +122,7 @@ export default {
     height: 100%;
     max-width: 256px;
     max-height: 256px;
-    min-height: 248px;
+    min-height: 80px;
     border: dashed 1px #ccc;
     border-radius: 8px;
     padding: 12px;

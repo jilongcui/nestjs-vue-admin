@@ -78,7 +78,7 @@
 import {
   getWithdrawList,
   confirmWithdraw,
-  rejectWithdraw
+  rejectWithdraw,
 } from "@/api/account/withdraw";
 import { mapGetters } from "vuex";
 
