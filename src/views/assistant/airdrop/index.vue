@@ -37,28 +37,36 @@
                 <el-button type="danger" plain size="mini" @click="handleExportData">导出
                 </el-button>
             </el-col>
+            <!-- <el-col :span="1.5">
+                <el-button type="danger" plain size="mini" @click="handleDownloadTemp">下载模版
+                </el-button>
+            </el-col> -->
             <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
         </el-row>
 
         <el-table v-loading="loading" :data="dataList">
             <el-table-column label="id" align="center" prop="id" width="80" />
             <el-table-column label="数量" align="center" prop="count" />
-            <el-table-column label="状态" align="center" prop="status" width="80" >
+            <el-table-column label="状态" align="center" prop="status" width="80">
+                <template slot-scope="scope">
+                    <dict-tag :options="dict.type.airdropwhitelist_status" :value="scope.row.status" />
+                </template>
             </el-table-column>
-            <el-table-column label="领取方式" align="center" prop="claimType" width="100" >
+            <el-table-column label="领取方式" align="center" prop="claimType" width="100">
                 <template slot-scope="scope">
                     <span>{{ claimTypes[scope.row.claimType].label}}</span>
                 </template>
             </el-table-column>
-            <el-table-column label="collectionIds" align="center" prop="collectionIds" width="100">
+            <el-table-column label="藏品合集ID" align="center" prop="collectionIds" width="100">
             </el-table-column>
             <el-table-column label="用户" width="200">
                 <template slot-scope="scope">
-                    <div style="display: flex; align-items: center;">
-                        <img :src="scope.row.user.avatar"
-                            style="width:32px; height: 32px; display: block; margin-right: 3px;" />
-                        <span>{{ scope.row.user.nickName }}</span>
-                    </div>
+                    <span>{{ scope.row.user.nickName || '-'}}</span>
+                    <!-- <div style="display: flex; align-items: center;"> -->
+                    <!-- <img :src="scope.row.user.avatar"
+                            style="width:32px; height: 32px; display: block; margin-right: 3px;" /> -->
+                    <!-- <span>{{ scope.row.user.nickName || '-'}}</span> -->
+                    <!-- </div> -->
                 </template>
             </el-table-column>
 
@@ -179,6 +187,7 @@ export default {
         AddCollection,
         AddUser
     },
+    dicts: ['airdropwhitelist_status'],
     data() {
         return {
             claimTypes: [
@@ -339,7 +348,7 @@ export default {
             console.log(this.form);
             this.$refs["form"].validate((valid) => {
                 if (valid) {
-                    const { user, collections,count, ...reset } = this.form;
+                    const { user, collections, count, ...reset } = this.form;
                     const data = {
                         ...reset,
                         collectionIds: collections.map(item => item.id).join(','),
