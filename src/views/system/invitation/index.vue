@@ -79,9 +79,6 @@ export default {
   },
   created() {
     this.getList();
-    this.getConfigKey("sys.user.initPassword").then(response => {
-      this.initPassword = response.data;
-    });
   },
   methods: {
     /** 查询列表 */
