@@ -4,7 +4,11 @@
       <el-form-item label="名称" prop="name">
         <el-input v-model="queryParams.name" placeholder="请输入藏品名称" clearable @keyup.enter.native="handleQuery" />
       </el-form-item>
-
+      <el-form-item label="类型" prop="type">
+        <el-select v-model="queryParams.type" placeholder="请选择藏品类型" clearable>
+          <el-option v-for="t in collectionTypeArr" :key="t.key" :label="t.value" :value="t.key"></el-option>
+        </el-select>
+      </el-form-item>
       <el-form-item label="合约" prop="contractId">
         <el-select v-model="queryParams.contractId" placeholder="请选择合约" clearable>
           <el-option v-for="c in contractList" :key="c.id" :label="c.chain" :value="c.id" />
@@ -35,6 +39,16 @@
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="序号" align="center" prop="id" width="60" />
       <el-table-column label="名称" align="center" prop="name" />
+      <el-table-column label="类型" align="center">
+        <template slot-scope="scope">
+          <span>{{ collectionType[scope.row.type] }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="盲盒等级" align="center">
+        <template slot-scope="scope">
+          <span>{{ magicBoxLevel[scope.row.level] || '-' }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="supply" align="center" prop="supply" width="90" />
       <el-table-column label="current" align="center" prop="current" width="90" />
       <el-table-column label="状态" align="center" prop="status" width="100">
@@ -66,60 +80,50 @@
     <!-- 添加或修改对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="580px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-row>
-          <el-col :span="24">
-            <el-form-item label="name" prop="name">
-              <el-input v-model="form.name" placeholder="请输入藏品名称" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="remark" prop="remark">
-              <el-input type="textarea" v-model="form.remark" placeholder="请输入" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="desc" prop="desc">
-              <editor v-model="form.desc" :min-height="192" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="图片" prop="images" required>
-              <image-upload v-model="form.images">
-                <el-button size="small">
-                  选择
-                  <i class="el-icon-upload el-icon--right"></i>
-                </el-button>
-              </image-upload>
-            </el-form-item>
-          </el-col>
-        </el-row>
+        <el-form-item label="名称" prop="name">
+          <el-input v-model="form.name" placeholder="请输入藏品名称" />
+        </el-form-item>
+        <el-form-item label="图片" prop="images" required>
+          <image-upload v-model="form.images">
+            <el-button size="small">
+              选择
+              <i class="el-icon-upload el-icon--right"></i>
+            </el-button>
+          </image-upload>
+        </el-form-item>
+        <el-form-item label="合约" prop="contractId">
+          <el-select v-model="form.contractId" placeholder="请选择合约">
+            <el-option v-for="c in contractList" :key="c.id" :label="c.chain" :value="c.id"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="supply" prop="supply">
+          <el-input-number controls-position="right" v-model="form.supply" placeholder="" />
+        </el-form-item>
+
         <el-row>
           <el-col :span="12">
-            <el-form-item label="supply" prop="supply">
-              <el-input-number controls-position="right" v-model="form.supply" placeholder="" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="current" prop="current">
-              <el-input-number controls-position="right" v-model="form.current" placeholder="" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="状态" prop="status">
-              <el-select v-model="form.status" placeholder="请选择状态">
-                <el-option v-for="dict in dict.type.collection_status" :key="dict.value" :label="dict.label"
-                  :value="dict.value"></el-option>
+            <el-form-item label="藏品类型" prop="type">
+              <el-select v-model="form.type" placeholder="请选择藏品类型">
+                <el-option v-for="t in collectionTypeArr" :key="t.key" :label="t.value" :value="t.key"></el-option>
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="12">
-            <el-form-item label="合约" prop="contractId">
-              <el-select v-model="form.contractId" placeholder="请选择合约">
-                <el-option v-for="c in contractList" :key="c.id" :label="c.chain" :value="c.id"></el-option>
+          <el-col :span="12" v-if="form.type === '1'">
+            <el-form-item label="盲盒等级" prop="level">
+              <el-select v-model="form.level" placeholder="请选择盲盒等级">
+                <el-option v-for="t in magicBoxLevelArr" :key="t.key" :label="t.value" :value="t.key"></el-option>
               </el-select>
             </el-form-item>
           </el-col>
         </el-row>
+
+        <el-form-item label="备注" prop="remark">
+          <el-input type="textarea" v-model="form.remark" placeholder="请输入" />
+        </el-form-item>
+        <el-form-item label="藏品介绍" prop="desc">
+          <editor v-model="form.desc" :min-height="192" />
+        </el-form-item>
+
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
@@ -143,11 +147,12 @@ import { mapGetters } from "vuex";
 const DEFAULT_FORM = {
   name: undefined,
   remark: undefined,
+  type: '0',
   desc: undefined,
   images: undefined,
   supply: undefined,
-  current: undefined,
-  status: undefined,
+  current: 0,
+  status: "0",
   authorId: undefined,
   contractId: undefined
 }
@@ -199,12 +204,54 @@ export default {
         ],
       },
 
+      // 藏品类型
+      collectionType: {
+        0: '普通藏品',
+        1: '盲盒藏品'
+      },
+
+      // 盲盒等级
+      magicBoxLevel: {
+        1: 'N',
+        2: "SR",
+        3: "SSR",
+        4: 'UR'
+      },
+
       dataSource: [],
       contractList: [],
     };
   },
   computed: {
     ...mapGetters(["userInfo"]),
+    collectionTypeArr() {
+      const arr = []
+      for (const key in this.collectionType) {
+        if (Object.hasOwnProperty.call(this.collectionType, key)) {
+          const value = this.collectionType[key];
+          arr.push({
+            key,
+            value
+          })
+
+        }
+      }
+      return arr
+    },
+    magicBoxLevelArr() {
+      const arr = []
+      for (const key in this.magicBoxLevel) {
+        if (Object.hasOwnProperty.call(this.magicBoxLevel, key)) {
+          const value = this.magicBoxLevel[key];
+          arr.push({
+            key,
+            value
+          })
+
+        }
+      }
+      return arr
+    },
   },
   created() {
     this.getList();

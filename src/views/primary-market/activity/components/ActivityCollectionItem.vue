@@ -6,6 +6,7 @@
         <img class="cover" :src="cover" />
         <div class="content">
             <p class="name">{{ item.name }}</p>
+            <span v-if="item.level">{{ magicBoxLevel[item.level] || '-'}}</span>
         </div>
     </div>
 </template>
@@ -22,6 +23,13 @@ export default {
     data() {
         return {
             baseUrl: process.env.VUE_APP_BASE_API,
+            // 盲盒等级
+            magicBoxLevel: {
+                1: 'N',
+                2: "SR",
+                3: "SSR",
+                4: 'UR'
+            },
         }
     },
     computed: {
@@ -76,6 +84,9 @@ export default {
 
     .content {
         padding: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
 
         .name {
             margin: 0px;

@@ -12,6 +12,13 @@
                         @keyup.enter.native="handleQuery" />
                 </el-form-item>
 
+                <el-form-item label="类型" prop="type">
+                    <el-select v-model="queryParams.type" placeholder="请选择藏品类型" clearable>
+                        <el-option v-for="t in collectionTypeArr" :key="t.key" :label="t.value" :value="t.key">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+
                 <el-form-item label="合约" prop="contractId">
                     <el-select v-model="queryParams.contractId" placeholder="请选择合约" clearable>
                         <el-option v-for="c in contractList" :key="c.id" :label="c.chain" :value="c.id" />
@@ -86,7 +93,29 @@ export default {
             total: 0,
             dataSource: [],
             contractList: [],
+            // 藏品类型
+            collectionType: {
+                0: '普通藏品',
+                1: '盲盒藏品'
+            },
         }
+    },
+    computed: {
+
+        collectionTypeArr() {
+            const arr = []
+            for (const key in this.collectionType) {
+                if (Object.hasOwnProperty.call(this.collectionType, key)) {
+                    const value = this.collectionType[key];
+                    arr.push({
+                        key,
+                        value
+                    })
+
+                }
+            }
+            return arr
+        },
     },
     created() {
         getContractList({ pageNum: 1, pageSize: 999 }).then(res => {

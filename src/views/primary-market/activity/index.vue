@@ -42,7 +42,7 @@
       <el-table-column label="置顶" align="center" prop="top">
         <template slot-scope="scope">
           <el-tag :type="top_status_dict[scope.row.top].type">{{
-              top_status_dict[scope.row.top].label
+          top_status_dict[scope.row.top].label
           }}</el-tag>
         </template>
       </el-table-column>
@@ -101,22 +101,12 @@
       @pagination="getList" />
 
     <!-- 添加或修改公告对话框 -->
-    <el-dialog :title="title" :visible.sync="open" width="580px" append-to-body>
+    <el-dialog :title="title" :visible.sync="open" width="580px" append-to-body @close="cancel">
       <el-form ref="form" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="活动标题" prop="title">
           <el-input v-model="form.title"></el-input>
         </el-form-item>
 
-        <el-row>
-          <el-col :span="11">
-            <el-form-item label="活动类型" prop="type">
-              <el-select v-model="form.type" placeholder="请选择活动类型">
-                <el-option v-for="dict in dict.type.activity_type" :key="dict.value" :label="dict.label"
-                  :value="dict.value"></el-option>
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
 
         <el-form-item label="封面图片" prop="coverImage">
           <image-upload v-model="form.coverImage" :limit="1">
@@ -127,43 +117,17 @@
           </image-upload>
         </el-form-item>
 
-        <el-form-item label="置顶" prop="top">
-          <el-checkbox v-model="form.top">{{
-              form.top ? "已置顶" : "不置顶"
-          }}</el-checkbox>
-        </el-form-item>
-        <el-form-item label="活动规则" prop="ruleInfo">
-          <el-input type="textarea" v-model="form.ruleInfo" />
-        </el-form-item>
-        <el-form-item label="supply" prop="supply">
-          <el-input-number controls-position="right" v-model="form.supply" />
-        </el-form-item>
-        <el-form-item label="current" prop="current">
-          <el-input-number controls-position="right" v-model="form.current" />
-        </el-form-item>
-
-        <el-form-item label="价格" prop="price">
-          <el-input-number controls-position="right" v-model="form.price" />
-        </el-form-item>
-        <el-form-item label="活动时间" prop="timeRange">
-          <el-date-picker v-model="form.timeRange" type="datetimerange" range-separator="至" start-placeholder="开始时间"
-            end-placeholder="结束时间">
-          </el-date-picker>
-        </el-form-item>
-
-        <el-form-item label="作者" v-if="enableEditCollections">
-          <div v-if="form.authorName" style="display: flex; align-items: center">
-            <img v-if="form.avatar" :src="baseUrl + form.avatar" style="
-                width: 40px;
-                height: 40px;
-                border-radius: 20px;
-                margin-right: 4px;
-              " />
-            <span>{{ form.authorName }}</span>
-          </div>
-          <div v-else style="color: red">请选择藏品</div>
-        </el-form-item>
-        <el-form-item v-if="enableEditCollections" label="活动藏品" prop="collections">
+        <el-row>
+          <el-col :span="11">
+            <el-form-item label="活动类型" prop="type">
+              <el-select v-model="form.type" placeholder="请选择活动类型" @change="form.collections = []">
+                <el-option v-for="dict in dict.type.activity_type" :key="dict.value" :label="dict.label"
+                  :value="dict.value"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="活动藏品" prop="collections">
           <el-row>
             <el-col :span="12" v-for="c in form.collections" :key="c.id">
               <div style="padding: 6px">
@@ -177,6 +141,32 @@
             </el-col>
           </el-row>
         </el-form-item>
+
+        <el-form-item label="supply" prop="supply">
+          <el-input-number controls-position="right" :disabled="form.type === '1'" v-model="form.supply" />
+        </el-form-item>
+        <el-form-item label="current" prop="current">
+          <el-input-number controls-position="right" v-model="form.current" />
+        </el-form-item>
+
+        <el-form-item label="价格" prop="price">
+          <el-input-number controls-position="right" v-model="form.price" />
+        </el-form-item>
+        <el-form-item label="置顶" prop="top">
+          <el-checkbox v-model="form.top">{{
+          form.top ? "已置顶" : "不置顶"
+          }}</el-checkbox>
+        </el-form-item>
+        <el-form-item label="活动时间" prop="timeRange">
+          <el-date-picker v-model="form.timeRange" type="datetimerange" range-separator="至" start-placeholder="开始时间"
+            end-placeholder="结束时间">
+          </el-date-picker>
+        </el-form-item>
+        <el-form-item label="活动规则" prop="ruleInfo">
+          <el-input type="textarea" v-model="form.ruleInfo" />
+        </el-form-item>
+
+
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
@@ -212,6 +202,7 @@ const DEFAULT_FORM = {
   contractId: undefined,
   type: undefined,
   top: false,
+  id: undefined,
   authorName: undefined,
   avatar: undefined,
   collections: undefined,
@@ -226,7 +217,6 @@ export default {
   },
   data() {
     return {
-      baseUrl: process.env.VUE_APP_BASE_API,
       top_status_dict: {
         1: {
           label: "是",
@@ -257,8 +247,6 @@ export default {
       title: "",
       // 是否显示弹出层
       open: false,
-      // 表单中是否允许编辑活动内的藏品(新增活动表单不允许，修改活动表单允许)
-      enableEditCollections: false,
       // 当前活动的藏品
       // currentCollections: [],
       // 查询参数
@@ -286,6 +274,20 @@ export default {
         collections: [{ required: true, message: "藏品不能为空" }],
       },
     };
+  },
+  computed: {
+    isEdit() {
+      return Boolean(this.form && this.form.id)
+    }
+  },
+  watch: {
+    // 统计更新盲盒的总supply
+    'form.collections'() {
+      if (this.form.type === "1" && this.form.collections) {
+        const totalSupply = this.form.collections.reduce((sum, e) => sum + Number(e.supply || 0), 0)
+        this.form.supply = totalSupply
+      }
+    }
   },
   created() {
     this.getList();
@@ -331,14 +333,11 @@ export default {
     /** 新增按钮操作 */
     handleAdd() {
       this.reset();
-      this.enableEditCollections = false;
       this.open = true;
-
       this.title = "添加活动";
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
-      this.enableEditCollections = true;
       this.reset();
       const id = row.id || this.ids;
       getActivityDetailsById(id).then((response) => {
@@ -358,9 +357,8 @@ export default {
     submitForm: function () {
       console.log(this.form);
       this.$refs["form"].validate((valid) => {
-        console.log(valid);
         if (valid) {
-          const { timeRange, top, ...reset } = this.form;
+          const { timeRange, top, collections, ...reset } = this.form;
           const data = {
             ...reset,
             top: top ? "1" : "0",
@@ -368,17 +366,28 @@ export default {
             endTime: timeRange[1],
           };
           if (this.form.id != undefined) {
-            updateActivity(data, this.form.id).then((response) => {
+            updateActivity(data, this.form.id).then(() => {
               this.$modal.msgSuccess("修改成功");
               this.open = false;
               this.getList();
             });
           } else {
-            addActivity(data).then((response) => {
-              this.$modal.msgSuccess("新增成功");
-              this.open = false;
-              this.getList();
+            addActivity(data).then((res) => {
+              if (res.code === 200) {
+                this.$modal.msgSuccess("新增成功");
+                this.open = false;
+                this.getList();
+                if (collections && collections.length && res.data && res.data.id) {
+                  collections.forEach(item => {
+                    if (item.id) {
+                      appendCollectionToActivity(res.data.id, item.id)
+
+                    }
+                  })
+                }
+              }
             });
+
           }
         }
       });
@@ -401,32 +410,40 @@ export default {
      * 移除藏品
      * @param {*} c
      */
-    handleRemoveCollection(c) {
-      if (this.form.id != undefined && c.id !== undefined) {
-        removeCollectionFromActivity(this.form.id, c.id).then((response) => {
+    async handleRemoveCollection(c) {
+      if (c.id !== undefined) {
+        if (this.isEdit) {
+          await removeCollectionFromActivity(this.form.id, c.id)
           this.$modal.msgSuccess("删除成功");
-          this.form.collections = this.form.collections.filter(
-            (item) => item.id !== c.id
-          );
-
-          this.form.avatar = undefined;
-          this.form.authorName = undefined;
-        });
+        }
+        this.form.collections = this.form.collections.filter(
+          (item) => item.id !== c.id
+        );
       }
     },
     /**
      * 添加藏品
      * @param {*} c
      */
-    handleAddCollection(c) {
-      if (this.form.id != undefined && c.id !== undefined) {
-        appendCollectionToActivity(this.form.id, c.id).then((response) => {
-          this.$modal.msgSuccess("添加成功");
-          this.form.collections = [...this.form.collections, c];
+    async handleAddCollection(c) {
+      if (c && c.id !== undefined) {
+        if (this.form.type !== c.type) {
+          this.$message.error("藏品类型与活动类型不符合");
+          return
+        }
 
+        const idx = this.form.collections.findIndex(item => item.id === c.id)
+        if (idx < 0) {
+          if (this.isEdit) {
+            await appendCollectionToActivity(this.form.id, c.id)
+            this.$modal.msgSuccess("添加成功");
+          }
+          this.form.collections = [...this.form.collections, c];
           this.form.avatar = c.author.avatar;
           this.form.authorName = c.author.nickName;
-        });
+        } else {
+          this.$message.error("重复添加");
+        }
       }
     },
 
