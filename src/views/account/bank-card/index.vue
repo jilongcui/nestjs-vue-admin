@@ -2,13 +2,13 @@
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
       <el-form-item label="手机号" prop="mobile">
-        <el-input v-model="queryParams.userId" placeholder="预留手机号" clearable @keyup.enter.native="handleQuery" />
+        <el-input v-model="queryParams.mobile" placeholder="预留手机号" clearable @keyup.enter.native="handleQuery" />
       </el-form-item>
       <el-form-item label="卡号" prop="cardNo">
-        <el-input v-model="queryParams.userId" placeholder="银行卡卡号" clearable @keyup.enter.native="handleQuery" />
+        <el-input v-model="queryParams.cardNo" placeholder="银行卡卡号" clearable @keyup.enter.native="handleQuery" />
       </el-form-item>
       <el-form-item label="银行名称" prop="bankName">
-        <el-input v-model="queryParams.userId" placeholder="银行名称" clearable @keyup.enter.native="handleQuery" />
+        <el-input v-model="queryParams.bankName" placeholder="银行名称" clearable @keyup.enter.native="handleQuery" />
       </el-form-item>
       <el-form-item label="状态" prop="status">
         <el-select v-model="queryParams.status" placeholder="请选择状态">
@@ -17,7 +17,7 @@
           </el-option>
         </el-select>
       </el-form-item>
-      <el-form-item label="用户ID" prop="id">
+      <el-form-item label="用户ID" prop="userId">
         <el-input v-model="queryParams.userId" placeholder="请输入ID" clearable @keyup.enter.native="handleQuery" />
       </el-form-item>
 

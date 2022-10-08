@@ -4,12 +4,12 @@ import request from "@/utils/request";
  * 查询银行卡列表
  *
  * @param {{
- *    cardNo: string;    // 持卡人银行卡号
- *    mobile: string;    // 持卡人预留手机号
- *    bankName: string;  // 银行名称
- *    cardType: string;  // 银行卡类型 0: 储蓄卡 1: 信用卡
- *    bankType: string;  // 银行类型: 只用于展示图标用途
- *    userId: string | number;
+ *    cardNo?: string;    // 持卡人银行卡号
+ *    mobile?: string;    // 持卡人预留手机号
+ *    bankName?: string;  // 银行名称
+ *    cardType?: string;  // 银行卡类型 0: 储蓄卡 1: 信用卡
+ *    bankType?: string;  // 银行类型: 只用于展示图标用途
+ *    userId?: string | null;    // 用户ID
  *    pageNum?: number; // 当前页
  *    pageSize?: number; // 每页条数
  *    withdrawByColumn?: string; // 排序字段
