@@ -68,7 +68,7 @@
 <script>
 
 import {
-    getCollectionList,
+    getCollectionNewList,
 } from "@/api/collection";
 
 import { getContractList } from "@/api/contract";
@@ -128,7 +128,7 @@ export default {
         /** 查询列表 */
         getList() {
             this.loading = true;
-            getCollectionList(this.queryParams).then(res => {
+            getCollectionNewList(this.queryParams).then(res => {
                 if (res.code === 200) {
                     this.dataSource = res.data.rows
                     this.total = res.data.total;

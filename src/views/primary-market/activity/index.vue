@@ -79,14 +79,23 @@
               更改状态<i class="el-icon-arrow-down el-icon--right"></i>
             </span>
             <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item :command="{
-                name: 'start',
+              <el-dropdown-item v-if="scope.row.top !== '1'" :command="{
+                name: 'top',
                 payload: scope.row,
-              }">活动开始</el-dropdown-item>
+              }">置顶</el-dropdown-item>
+              <el-dropdown-item v-if="scope.row.top === '1'" :command="{
+                name: 'untop',
+                payload: scope.row,
+              }">取消置顶</el-dropdown-item>
               <el-dropdown-item :command="{
                 name: 'sellOut',
                 payload: scope.row,
               }">藏品售罄</el-dropdown-item>
+
+              <el-dropdown-item :command="{
+                name: 'start',
+                payload: scope.row,
+              }">活动开始</el-dropdown-item>
               <el-dropdown-item :command="{
                 name: 'end',
                 payload: scope.row,
@@ -134,7 +143,8 @@
                 <ActivityCollectionItem :item="c" v-on:remove="handleRemoveCollection(c)" />
               </div>
             </el-col>
-            <el-col :span="12">
+            <el-col :span="12"
+              v-if="(form.type === '0' && form.collections.length < 1) || (form.type === '1' && form.collections.length < 10)">
               <div style="padding: 6px">
                 <AddActivityCollectionItem v-on:add="handleAddCollection" />
               </div>
@@ -142,9 +152,7 @@
           </el-row>
         </el-form-item>
 
-        <el-form-item label="supply" prop="supply">
-          <el-input-number controls-position="right" :disabled="form.type === '1'" v-model="form.supply" />
-        </el-form-item>
+
         <el-form-item label="current" prop="current">
           <el-input-number controls-position="right" v-model="form.current" />
         </el-form-item>
@@ -152,20 +160,14 @@
         <el-form-item label="价格" prop="price">
           <el-input-number controls-position="right" v-model="form.price" />
         </el-form-item>
-        <el-form-item label="置顶" prop="top">
-          <el-checkbox v-model="form.top">{{
-          form.top ? "已置顶" : "不置顶"
-          }}</el-checkbox>
-        </el-form-item>
         <el-form-item label="活动时间" prop="timeRange">
           <el-date-picker v-model="form.timeRange" type="datetimerange" range-separator="至" start-placeholder="开始时间"
             end-placeholder="结束时间">
           </el-date-picker>
         </el-form-item>
         <el-form-item label="活动规则" prop="ruleInfo">
-          <el-input type="textarea" v-model="form.ruleInfo" />
+          <editor v-model="form.ruleInfo" :min-height="192" />
         </el-form-item>
-
 
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -181,8 +183,7 @@ import {
   getActivityList,
   getActivityDetailsById,
   deleteActivityByIds,
-  appendCollectionToActivity,
-  removeCollectionFromActivity,
+  setTop,
   updateActivity,
   addActivity,
   setActivityStart,
@@ -196,15 +197,10 @@ const DEFAULT_FORM = {
   title: undefined,
   coverImage: undefined,
   ruleInfo: undefined,
-  supply: undefined,
   current: undefined,
   price: undefined,
-  contractId: undefined,
   type: undefined,
-  top: false,
   id: undefined,
-  authorName: undefined,
-  avatar: undefined,
   collections: undefined,
 };
 
@@ -266,7 +262,6 @@ export default {
         title: [{ required: true, message: "活动标题不能为空" }],
         coverImage: [{ required: true, message: "活动封面不能为空" }],
         ruleInfo: [{ required: true, message: "规则不能为空" }],
-        supply: [{ required: true, message: "supply不能为空" }],
         current: [{ required: true, message: "current不能为空" }],
         price: [{ required: true, message: "price不能为空" }],
         type: [{ required: true, message: "type不能为空", trigger: "change" }],
@@ -278,15 +273,6 @@ export default {
   computed: {
     isEdit() {
       return Boolean(this.form && this.form.id)
-    }
-  },
-  watch: {
-    // 统计更新盲盒的总supply
-    'form.collections'() {
-      if (this.form.type === "1" && this.form.collections) {
-        const totalSupply = this.form.collections.reduce((sum, e) => sum + Number(e.supply || 0), 0)
-        this.form.supply = totalSupply
-      }
     }
   },
   created() {
@@ -344,7 +330,6 @@ export default {
         const { startTime, endTime, top, ...reset } = response.data;
         this.form = {
           ...reset,
-          top: top === "1" ? true : false,
           timeRange: [startTime, endTime],
         };
         // this.currentCollections = collections;
@@ -361,9 +346,9 @@ export default {
           const { timeRange, top, collections, ...reset } = this.form;
           const data = {
             ...reset,
-            top: top ? "1" : "0",
             startTime: timeRange[0],
             endTime: timeRange[1],
+            collections: collections.map(({ id }) => ({ id }))
           };
           if (this.form.id != undefined) {
             updateActivity(data, this.form.id).then(() => {
@@ -377,14 +362,6 @@ export default {
                 this.$modal.msgSuccess("新增成功");
                 this.open = false;
                 this.getList();
-                if (collections && collections.length && res.data && res.data.id) {
-                  collections.forEach(item => {
-                    if (item.id) {
-                      appendCollectionToActivity(res.data.id, item.id)
-
-                    }
-                  })
-                }
               }
             });
 
@@ -412,10 +389,6 @@ export default {
      */
     async handleRemoveCollection(c) {
       if (c.id !== undefined) {
-        if (this.isEdit) {
-          await removeCollectionFromActivity(this.form.id, c.id)
-          this.$modal.msgSuccess("删除成功");
-        }
         this.form.collections = this.form.collections.filter(
           (item) => item.id !== c.id
         );
@@ -434,13 +407,7 @@ export default {
 
         const idx = this.form.collections.findIndex(item => item.id === c.id)
         if (idx < 0) {
-          if (this.isEdit) {
-            await appendCollectionToActivity(this.form.id, c.id)
-            this.$modal.msgSuccess("添加成功");
-          }
           this.form.collections = [...this.form.collections, c];
-          this.form.avatar = c.author.avatar;
-          this.form.authorName = c.author.nickName;
         } else {
           this.$message.error("重复添加");
         }
@@ -463,6 +430,12 @@ export default {
             break;
           case 'sellOut':
             await setActivitySellOut(payload.id)
+            break;
+          case 'top':
+            await setTop(true, payload.id)
+            break;
+          case 'untop':
+            await setTop(false, payload.id)
             break;
         }
         this.$modal.msgSuccess("操作成功");

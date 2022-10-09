@@ -5,7 +5,7 @@
         </div>
         <img class="cover" :src="cover" />
         <div class="content">
-            <p class="name">{{ item.name }}</p>
+            <p class="name">{{ item.name }}/共{{item.supply}}个</p>
             <span v-if="item.level">{{ magicBoxLevel[item.level] || '-'}}</span>
         </div>
     </div>

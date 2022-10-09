@@ -79,6 +79,29 @@ export function getCollectionList(params) {
 }
 
 /**
+ * 查询未参与活动的藏品列表
+ *
+ * @param {{
+ *    pageNum?: number; // 当前页
+ *    pageSize?: number; // 每页条数
+ *    orderByColumn?: string; // 排序字段
+ *    isAsc?: string; // 排序方式
+ *    contractId?: number; // 合约ID
+ *    status?: '0' | '1'; // 状态(0:下架 1: 上架)
+ *    name?: string; // 藏品名称
+ *    authorId?: number; // 作者ID
+ * }} params
+ * @returns
+ */
+export function getCollectionNewList(params) {
+  return request({
+    url: "/collection/newList",
+    method: "get",
+    params,
+  });
+}
+
+/**
  * 查询藏品详情
  *
  * @param {string | number} id

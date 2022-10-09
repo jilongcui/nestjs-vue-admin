@@ -4,17 +4,16 @@ import request from "@/utils/request";
  * 新增活动
  *
  * @param {{
- *  title:	string;
- *  coverImage: string;
- *  ruleInfo:	string;
- *  supply:	number;
- *  current:	number;
- *  presalePrice:	number;
- *  price:	number;
- *  needOrder:	string;
- *  deliverDelay:	string;
+ *  collections: {id:string}[];
  *  type:	0 | 1 | 2 | 3; // 类型 0:首发 1:盲盒 2:预售 3:秒杀
- *  status:	'0' | '1' | '2' | '3' | '4' | '5';  // 状态 0: 未展出 1:展示 2:预售 3:发货中 4:销售结束 5:取消
+ *  title:	string;
+ *  ruleInfo:	string;
+ *  startTime: string;
+ *  endTime: string;
+ *  coverImage: string;
+ *  current:	number;
+ *  price:	number;
+ *  status?:	'0' | '1' | '2' | '3' | '4' | '5';  // 状态 0: 未展出 1:展示 2:预售 3:发货中 4:销售结束 5:取消
  * }} activityObj
  *
  * @returns
@@ -34,17 +33,16 @@ export function addActivity(activityObj) {
  * 更新活动
  *
  * @param {{
- *  title:	string;
- *  coverImage: string;
- *  ruleInfo:	string;
- *  supply:	number;
- *  current:	number;
- *  presalePrice:	number;
- *  price:	number;
- *  needOrder:	string;
- *  deliverDelay:	string;
+ *  collections: {id:string}[];
  *  type:	0 | 1 | 2 | 3; // 类型 0:首发 1:盲盒 2:预售 3:秒杀
- *  status:	'0' | '1' | '2' | '3' | '4' | '5';  // 状态 0: 未展出 1:展示 2:预售 3:发货中 4:销售结束 5:取消
+ *  title:	string;
+ *  ruleInfo:	string;
+ *  startTime: string;
+ *  endTime: string;
+ *  coverImage: string;
+ *  current:	number;
+ *  price:	number;
+ *  status?:	'0' | '1' | '2' | '3' | '4' | '5';  // 状态 0: 未展出 1:展示 2:预售 3:发货中 4:销售结束 5:取消
  * }} activityObj
  * @param {string | number} id
  * @returns
@@ -57,6 +55,22 @@ export function updateActivity(activityObj, id) {
     },
     method: "put",
     data: activityObj,
+  });
+}
+
+/**
+ * 置顶/取消置顶
+ * @param {boolean} top
+ * @returns
+ */
+export function setTop(top, id) {
+  console.log("setTop:", top, id);
+  return request({
+    url: `/activity/${id}/${top ? "top" : "untop"}`,
+    headers: {
+      isToken: true,
+    },
+    method: "put",
   });
 }
 
