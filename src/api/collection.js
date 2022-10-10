@@ -126,3 +126,16 @@ export function deleteCollectionByIds(ids) {
     method: "delete",
   });
 }
+
+/**
+ * 设置藏品是否允许交易
+ *
+ * @param {string} id 藏品ID
+ * @param {boolean} allow 是否允许交易
+ */
+export function setAllowSell(id, allow) {
+  return request({
+    url: `/collection/${id}/${allow ? "openMarket" : "closeMarket"}`,
+    method: "put",
+  });
+}

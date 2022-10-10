@@ -66,10 +66,14 @@
           <span>{{ scope.row.contract.chain }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+      <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="200">
         <template slot-scope="scope">
           <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)">修改</el-button>
           <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)">删除</el-button>
+          <el-button v-if="scope.row.status==='0'" size="mini" type="text" @click="changeStatus(scope.row, true)">允许交易
+          </el-button>
+          <el-button v-if="scope.row.status==='1'" size="mini" type="text" @click="changeStatus(scope.row, false)">禁止交易
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -93,7 +97,7 @@
         </el-form-item>
         <el-form-item label="合约" prop="contractId">
           <el-select v-model="form.contractId" placeholder="请选择合约">
-            <el-option v-for="c in contractList" :key="c.id" :label="c.chain" :value="c.id"></el-option>
+            <el-option v-for="c in contractList" :key="c.id" :label="c.name" :value="c.id"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="supply" prop="supply">
@@ -138,7 +142,8 @@ import {
   getCollectionList,
   deleteCollectionByIds,
   getCollectionDetailsById,
-  updateCollection, addCollection
+  updateCollection, addCollection,
+  setAllowSell
 } from "@/api/collection";
 import { getContractList } from "@/api/contract";
 import { mapGetters } from "vuex";
@@ -356,6 +361,12 @@ export default {
         this.getList();
         this.$modal.msgSuccess("删除成功");
       }).catch(() => { });
+    },
+    changeStatus(row, allowSell) {
+      setAllowSell(row.id, allowSell).then(() => {
+        this.getList();
+        this.$modal.msgSuccess("设置成功");
+      })
     }
   }
 };
