@@ -42,7 +42,7 @@
         <template slot-scope="scope">
           <div style="display:flex; align-items: center">
             <img style="width: 60px; height: 40px; object-fit: cover; display: block; margin-right: 6px;"
-              :src="scope.row.activity.coverImage" />
+              :src="scope.row.image" />
             <div style="text-align: left;">
               <div style="font-size: 14px; line-height: 20px;">{{ scope.row.desc }}</div>
               <div style="font-size: 12px; line-height:20px;">x {{ scope.row.count }}
@@ -51,8 +51,8 @@
           </div>
         </template>
       </el-table-column>
-      <el-table-column label="总价格" align="center" prop="totalPrice" />
-      <el-table-column label="实际价格" align="center" prop="realPrice" />
+      <el-table-column label="总价格（¥）" align="center" prop="totalPrice" />
+      <el-table-column label="实际价格（¥）" align="center" prop="realPrice" />
 
       <el-table-column label="订单状态" align="center" prop="status" width="100">
         <template slot-scope="scope">
