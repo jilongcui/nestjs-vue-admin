@@ -28,13 +28,15 @@
         <el-row :gutter="10" class="mb8">
             <el-col :span="1.5">
                 <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
-                    v-hasPermi="['system:notice:add']">新增</el-button>
+                    v-hasPermi="['system:airdrop:add']">新增</el-button>
             </el-col>
             <el-col :span="1.5">
-                <el-button type="success" plain size="mini" @click="handleImportData">导入</el-button>
+                <el-button type="success" plain size="mini" @click="handleImportData"
+                    v-hasPermi="['system:airdrop:import']">导入</el-button>
             </el-col>
             <el-col :span="1.5">
-                <el-button type="danger" plain size="mini" @click="handleExportData">导出
+                <el-button type="danger" plain size="mini" @click="handleExportData"
+                    v-hasPermi="['system:airdrop:export']">导出
                 </el-button>
             </el-col>
             <!-- <el-col :span="1.5">
