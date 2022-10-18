@@ -28,15 +28,15 @@
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
         <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
-          v-hasPermi="['system:notice:add']">新增</el-button>
+          v-hasPermi="['system:activity:add']">新增</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button type="success" plain icon="el-icon-edit" size="mini" :disabled="single" @click="handleUpdate"
-          v-hasPermi="['system:notice:edit']">修改</el-button>
+          v-hasPermi="['system:activity:edit']">修改</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button type="danger" plain icon="el-icon-delete" size="mini" :disabled="multiple" @click="handleDelete"
-          v-hasPermi="['system:notice:remove']">删除</el-button>
+          v-hasPermi="['system:activity:remove']">删除</el-button>
       </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
@@ -48,7 +48,7 @@
       <el-table-column label="置顶" align="center" prop="top">
         <template slot-scope="scope">
           <el-tag :type="top_status_dict[scope.row.top].type">{{
-              top_status_dict[scope.row.top].label
+          top_status_dict[scope.row.top].label
           }}</el-tag>
         </template>
       </el-table-column>
@@ -124,7 +124,7 @@
 
         <el-form-item label="置顶" prop="top">
           <el-checkbox v-model="form.top">{{
-              form.top ? "已置顶" : "不置顶"
+          form.top ? "已置顶" : "不置顶"
           }}</el-checkbox>
         </el-form-item>
         <el-form-item label="活动规则" prop="ruleInfo">
@@ -156,7 +156,7 @@
           </el-col>
         </el-row>
 
-        <el-form-item label="作者"  v-if="enableEditCollections">
+        <el-form-item label="作者" v-if="enableEditCollections">
           <div v-if="form.authorName" style="display: flex; align-items: center">
             <img v-if="form.avatar" :src="baseUrl + form.avatar" style="
                 width: 40px;

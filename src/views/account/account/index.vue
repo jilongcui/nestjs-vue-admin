@@ -58,10 +58,12 @@
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <div style="display: flex; align-items: center;justify-content: center;">
-            <el-button v-if="scope.row.status !== '2'" size="mini" type="text" @click="handleFreezeAccount(scope.row)">
+            <el-button v-if="scope.row.status !== '2'" size="mini" type="text" @click="handleFreezeAccount(scope.row)"
+              v-hasPermi="['system:account:freeze']">
               冻结
             </el-button>
-            <el-button v-if="scope.row.status === '2'" size="mini" type="text" @click="handleReleaseAccount(scope.row)">
+            <el-button v-if="scope.row.status === '2'" size="mini" type="text" @click="handleReleaseAccount(scope.row)"
+              v-hasPermi="['system:account:unfreeze']">
               解除冻结
             </el-button>
           </div>

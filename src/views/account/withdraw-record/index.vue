@@ -59,9 +59,11 @@
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <div style="display: flex; align-items: center;justify-content: center;">
-            <el-button v-if="scope.row.status === '0'" size="mini" type="text" @click="handleConfirm(scope.row)">通过
+            <el-button v-if="scope.row.status === '0'" size="mini" type="text" @click="handleConfirm(scope.row)"
+              v-hasPermi="['system:withdraw:confirm']">通过
             </el-button>
-            <el-button v-if="scope.row.status === '0'" size="mini" type="text" @click="handleReject(scope.row)">拒绝
+            <el-button v-if="scope.row.status === '0'" size="mini" type="text" @click="handleReject(scope.row)"
+              v-hasPermi="['system:withdraw:fail']">拒绝
             </el-button>
           </div>
         </template>

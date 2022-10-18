@@ -69,11 +69,11 @@
         <template slot-scope="scope">
           <div style="display: flex; align-items: center;justify-content: center;">
             <el-button v-if="scope.row.status !== '0'" size="mini" type="text"
-              @click="handleInvalidateBankcard(scope.row)">
+              @click="handleInvalidateBankcard(scope.row)" v-hasPermi="['system:bankcard:invalidate']">
               设置失效
             </el-button>
             <el-button v-if="scope.row.status !== '0' && scope.row.status !== '3'" size="mini" type="text"
-              @click="handleVerifyBankcard(scope.row)">
+              @click="handleVerifyBankcard(scope.row)" v-hasPermi="['system:bankcard:verify']">
               手动鉴权
             </el-button>
           </div>
