@@ -1,10 +1,10 @@
 <template>
   <div class="app-container home">
     <h3>
-      <el-link type="primary" href="https://www.bitlove.com">爱芯官网</el-link>
+      <el-link type="primary" href="https://www.startland.top">官网</el-link>
     </h3>
     <h3>
-      <el-link type="primary" href="admin.bitlove.com">爱芯后台管理</el-link>
+      <el-link type="primary" href="admin.startland.top">后台</el-link>
     </h3>
   </div>
 </template>
