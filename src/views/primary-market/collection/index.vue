@@ -22,14 +22,17 @@
 
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
-        <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd">新增</el-button>
+        <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
+          v-hasPermi="['system:collection:add']">新增</el-button>
       </el-col>
       <el-col :span="1.5">
-        <el-button type="success" plain icon="el-icon-edit" size="mini" :disabled="single" @click="handleUpdate">修改
+        <el-button type="success" plain icon="el-icon-edit" size="mini" :disabled="single" @click="handleUpdate"
+          v-hasPermi="['system:collection:add']">修改
         </el-button>
       </el-col>
       <el-col :span="1.5">
-        <el-button type="danger" plain icon="el-icon-delete" size="mini" :disabled="multiple" @click="handleDelete">删除
+        <el-button type="danger" plain icon="el-icon-delete" size="mini" :disabled="multiple" @click="handleDelete"
+          v-hasPermi="['system:collection:add']">删除
         </el-button>
       </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
@@ -68,11 +71,15 @@
       </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="200">
         <template slot-scope="scope">
-          <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)">修改</el-button>
-          <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)">删除</el-button>
-          <el-button v-if="scope.row.status==='0'" size="mini" type="text" @click="changeStatus(scope.row, true)">允许交易
+          <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)"
+            v-hasPermi="['system:collection:edit']">修改</el-button>
+          <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)"
+            v-hasPermi="['system:collection:delete']">删除</el-button>
+          <el-button v-if="scope.row.status==='0'" size="mini" type="text" @click="changeStatus(scope.row, true)"
+            v-hasPermi="['system:collection:openMarket']">允许交易
           </el-button>
-          <el-button v-if="scope.row.status==='1'" size="mini" type="text" @click="changeStatus(scope.row, false)">禁止交易
+          <el-button v-if="scope.row.status==='1'" size="mini" type="text" @click="changeStatus(scope.row, false)"
+            v-hasPermi="['system:collection:closeMarket']">禁止交易
           </el-button>
         </template>
       </el-table-column>
