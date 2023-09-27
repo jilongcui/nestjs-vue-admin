@@ -2,7 +2,7 @@
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
       <el-form-item label="地址" prop="address">
-        <el-input v-model="queryParams.address" placeholder="请输入地址" clearable @keyup.enter.native="handleQuery" />
+        <el-input v-model="queryParams.from" placeholder="请输入地址" clearable @keyup.enter.native="handleQuery" />
       </el-form-item>
       <el-form-item label="交易ID" prop="txid">
         <el-input v-model="queryParams.txid" placeholder="请输入交易ID" clearable @keyup.enter.native="handleQuery" />
@@ -45,8 +45,8 @@
       </el-table-column>
       <el-table-column label="地址" align="center" prop="address" width="200">
         <template slot-scope="scope">
-          {{ scope.row.address.slice(0, 8) + '...' + scope.row.address.slice(-6) }}
-          <el-link :underline="false" icon="el-icon-document-copy" v-clipboard:copy="scope.row.address"
+          {{ scope.row.from.slice(0, 8) + '...' + scope.row.from.slice(-6) }}
+          <el-link :underline="false" icon="el-icon-document-copy" v-clipboard:copy="scope.row.from"
             v-clipboard:success="clipboardSuccess"></el-link>
         </template>
       </el-table-column>
@@ -88,7 +88,7 @@
         <el-row>
           <el-col :span="12">
             <el-form-item label="地址" prop="address">
-              <el-input v-model="form.address" placeholder="请输入地址" />
+              <el-input v-model="form.from" placeholder="请输入地址" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
