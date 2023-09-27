@@ -3,7 +3,7 @@ import request from '@/utils/request'
 // 查询地址列表
 export function listCollect(query) {
   return request({
-    url: '/wallet/collect',
+    url: '/wallet/collect/list',
     method: 'get',
     params: query
   })
