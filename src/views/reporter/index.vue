@@ -57,10 +57,9 @@
       <el-table-column label="提交时间" width="150">
         <template slot-scope="scope">{{ parseTime(scope.row.createTime) }}</template>
       </el-table-column>
-      <el-table-column label="操作" width="160" align="center" fixed="right">
+      <el-table-column label="操作" width="120" align="center" fixed="right">
         <template slot-scope="scope">
           <el-button size="mini" type="text" icon="el-icon-view" @click="handleView(scope.row)">查看</el-button>
-          <el-button size="mini" type="text" icon="el-icon-check" v-if="scope.row.status === '0'" @click="handleRead(scope.row)">标为已处理</el-button>
           <el-button size="mini" type="text" icon="el-icon-delete" style="color:#f56c6c" @click="handleDelete(scope.row)">删除</el-button>
         </template>
       </el-table-column>
@@ -68,67 +67,73 @@
 
     <pagination v-show="total > 0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize" @pagination="getList" />
 
-    <!-- 查看/会话弹窗 -->
-    <el-dialog :title="chatTitle" :visible.sync="chatVisible" width="560px" append-to-body top="3vh" @close="chatVisible = false">
-      <div v-loading="chatLoading" style="height:480px; overflow-y:auto; padding:8px 4px;" ref="chatBox">
+    <!-- ==================== 浮动会话组件 ==================== -->
+    <!-- 最小化：圆形浮动按钮 -->
+    <div v-if="!chatExpanded && chatReporterId" class="chat-fab" @click="chatExpanded = true">
+      <el-badge :value="chatUnread" :hidden="chatUnread === 0" :max="99">
+        <div class="fab-avatar">C</div>
+      </el-badge>
+    </div>
+
+    <!-- 展开：右侧浮动面板 -->
+    <div v-if="chatExpanded" class="chat-panel">
+      <!-- 头部 -->
+      <div class="chat-header">
+        <span class="chat-title">{{ chatTitle }}</span>
+        <div class="chat-header-actions">
+          <el-button type="text" size="mini" icon="el-icon-minus" style="color:#fff;" @click="chatExpanded = false" title="最小化"></el-button>
+          <el-button type="text" size="mini" icon="el-icon-close" style="color:#fff;" @click="closeChat" title="关闭"></el-button>
+        </div>
+      </div>
+      <!-- 消息区 -->
+      <div class="chat-body" ref="chatBox">
         <div v-if="chatLoading" style="text-align:center; color:#999; padding:60px 0;">加载中...</div>
         <template v-for="(item, i) in chatDisplayItems">
-          <!-- 时间分隔 -->
-          <div v-if="item._type === 'time'" :key="'t'+i" style="text-align:center; font-size:11px; color:#999; margin:16px 0 12px;">
-            <span style="background:#f0f0f0; padding:2px 12px; border-radius:8px;">{{ item.text }}</span>
+          <div v-if="item._type === 'time'" :key="'t'+i" class="chat-time-divider">
+            <span>{{ item.text }}</span>
           </div>
-          <!-- 原始反馈 -->
-          <div v-else-if="item._type === 'original'" :key="'o'+i" style="margin-bottom:16px;">
+          <div v-else-if="item._type === 'original'" :key="'o'+i" style="margin-bottom:14px;">
             <div style="display:flex; align-items:flex-start; gap:8px;">
-              <div style="width:34px; height:34px; border-radius:50%; background:#e6a23c; color:#fff; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0;">U</div>
+              <div class="chat-avatar chat-avatar-user">U</div>
               <div style="flex:1; min-width:0;">
-                <div style="font-size:12px; color:#999; margin-bottom:3px;">
-                  用户 ({{ item.userId }}) {{ parseTime(item.createTime) }}
-                </div>
-                <div style="background:#fff; border:1px solid #e8e8e8; border-radius:12px 12px 12px 4px; padding:10px 14px; color:#333; word-break:break-word; white-space:pre-wrap; line-height:1.6;">
+                <div class="chat-msg-meta">用户 ({{ item.userId }})</div>
+                <div class="chat-bubble chat-bubble-user">
                   {{ item.description }}
                 </div>
-                <div v-if="item.contact" style="font-size:12px; color:#999; margin-top:4px;">联系方式：{{ item.contact }}</div>
+                <div v-if="item.contact" class="chat-extra">联系方式：{{ item.contact }}</div>
                 <div v-if="item.images && item.images.length" style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">
                   <el-image v-for="(img, j) in item.images" :key="j" :src="img"
-                    style="width:64px; height:64px; border-radius:4px; border:1px solid #eee; cursor:pointer;"
+                    style="width:60px; height:60px; border-radius:4px; border:1px solid #eee; cursor:pointer;"
                     fit="cover" :preview-src-list="item.images" />
                 </div>
+                <div class="chat-msg-time">{{ parseTime(item.createTime) }}</div>
               </div>
             </div>
           </div>
-          <!-- 会话消息 -->
-          <div v-else-if="item._type === 'msg'" :key="'m'+i" style="margin-bottom:12px;">
+          <div v-else-if="item._type === 'msg'" :key="'m'+i" style="margin-bottom:10px;">
             <div v-if="item.senderRole === 'admin'" style="display:flex; align-items:flex-start; gap:8px; flex-direction:row-reverse;">
-              <div style="width:34px; height:34px; border-radius:50%; background:#409eff; color:#fff; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0;">A</div>
+              <div class="chat-avatar chat-avatar-admin">A</div>
               <div style="flex:1; min-width:0; display:flex; flex-direction:column; align-items:flex-end;">
-                <div style="font-size:12px; color:#999; margin-bottom:3px;">
-                  {{ parseTime(item.createTime) }}
-                </div>
-                <div style="background:#409eff; color:#fff; padding:8px 14px; border-radius:12px 12px 4px 12px; max-width:80%; word-break:break-word; white-space:pre-wrap; line-height:1.5;">
-                  {{ item.content }}
-                </div>
+                <div class="chat-bubble chat-bubble-admin">{{ item.content }}</div>
+                <div class="chat-msg-time">{{ parseTime(item.createTime) }}</div>
               </div>
             </div>
             <div v-else style="display:flex; align-items:flex-start; gap:8px;">
-              <div style="width:34px; height:34px; border-radius:50%; background:#e6a23c; color:#fff; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0;">U</div>
+              <div class="chat-avatar chat-avatar-user">U</div>
               <div style="flex:1; min-width:0;">
-                <div style="font-size:12px; color:#999; margin-bottom:3px;">
-                  {{ parseTime(item.createTime) }}
-                </div>
-                <div style="background:#fff; border:1px solid #e8e8e8; border-radius:12px 12px 12px 4px; padding:8px 14px; color:#333; word-break:break-word; white-space:pre-wrap; line-height:1.5;">
-                  {{ item.content }}
-                </div>
+                <div class="chat-bubble chat-bubble-user">{{ item.content }}</div>
+                <div class="chat-msg-time">{{ parseTime(item.createTime) }}</div>
               </div>
             </div>
           </div>
         </template>
       </div>
-      <div style="display:flex; gap:8px; margin-top:8px;">
-        <el-input v-model="chatInput" type="textarea" :rows="2" placeholder="输入回复内容..." @keyup.enter.native="sendChatMessage" style="flex:1;" :disabled="chatLoading" />
-        <el-button type="primary" @click="sendChatMessage" :disabled="chatLoading || !chatInput.trim()" style="height:52px; width:80px;">发送</el-button>
+      <!-- 输入区 -->
+      <div class="chat-footer">
+        <el-input v-model="chatInput" type="textarea" :rows="2" placeholder="输入回复..." @keyup.enter.native="sendChatMessage" :disabled="chatLoading" style="flex:1;" />
+        <el-button type="primary" @click="sendChatMessage" :disabled="chatLoading || !chatInput.trim()" style="height:52px; width:72px; margin-left:8px;">发送</el-button>
       </div>
-    </el-dialog>
+    </div>
   </div>
 </template>
 
@@ -138,8 +143,7 @@ import io from "socket.io-client";
 
 function parseTimeStr(t) {
   if (!t) return 0;
-  var d = new Date(t);
-  return d.getTime();
+  return new Date(t).getTime();
 }
 function formatDateLabel(t) {
   var d = new Date(t);
@@ -161,8 +165,8 @@ export default {
       loading: false, total: 0, list: [],
       ids: [], multiple: true, showSearch: true,
       queryParams: { pageNum: 1, pageSize: 20, category: undefined, status: undefined, userId: undefined },
-      // 会话查看
-      chatVisible: false,
+      // 浮动会话
+      chatExpanded: false,
       chatLoading: false,
       chatMessages: [],
       chatInput: '',
@@ -172,6 +176,8 @@ export default {
       chatContact: '',
       chatImages: [],
       chatCreateTime: null,
+      chatDescription: '',
+      chatUnread: 0,
       socket: null,
     };
   },
@@ -183,7 +189,6 @@ export default {
     },
     chatDisplayItems() {
       var items = [];
-      // 第一条：原始反馈
       if (this.chatReporterId) {
         items.push({
           _type: 'original',
@@ -194,7 +199,6 @@ export default {
           createTime: this.chatCreateTime,
         });
       }
-      // 时间分隔 + 消息
       var lastTime = this.chatCreateTime ? parseTimeStr(this.chatCreateTime) : 0;
       for (var i = 0; i < this.chatMessages.length; i++) {
         var msg = this.chatMessages[i];
@@ -202,7 +206,7 @@ export default {
         if (lastTime && (t - lastTime) > 30 * 60 * 1000) {
           items.push({ _type: 'time', text: formatDateLabel(t) });
         }
-        items.push({ _type: 'msg', ...msg });
+        items.push({ _type: 'msg', senderRole: msg.senderRole, content: msg.content, createTime: msg.createTime });
         lastTime = t;
       }
       return items;
@@ -252,26 +256,29 @@ export default {
         vm.getList();
       });
       this.socket.on('admin:reporter-message', function(data) {
-        if (vm.chatVisible && data.reporterId === vm.chatReporterId) {
-          vm.chatMessages.push(data);
-          vm.$nextTick(function() { vm.scrollChat(); });
+        if (data.reporterId === vm.chatReporterId) {
+          if (vm.chatExpanded) {
+            vm.chatMessages.push(data);
+            vm.$nextTick(function() { vm.scrollChat(); });
+          } else {
+            vm.chatUnread++;
+          }
         }
       });
     },
 
-    // ===== 查看/会话合并 =====
-
     handleView(row) {
       var vm = this;
-      this.chatVisible = true;
-      this.chatLoading = true;
       this.chatReporterId = row.id;
       this.chatCategory = row.category || 'feedback';
       this.chatMessages = [];
       this.chatInput = '';
+      this.chatUnread = 0;
+      this.chatExpanded = true;
+      this.chatLoading = true;
       // 标记已读
-      if (row.status === '0') markReporterRead(row.id);
-      // 加载详情 + 消息
+      if (row.status === '0') markReporterRead(row.id).then(function() { vm.getList(); });
+      // 加载详情
       getReporter(row.id).then(function(detailRes) {
         if (detailRes.code === 200) {
           var d = detailRes.data;
@@ -287,6 +294,12 @@ export default {
         vm.chatLoading = false;
         vm.$nextTick(function() { vm.scrollChat(); });
       }).catch(function() { vm.chatLoading = false; });
+    },
+
+    closeChat() {
+      this.chatExpanded = false;
+      this.chatReporterId = null;
+      this.chatMessages = [];
     },
 
     sendChatMessage() {
@@ -308,14 +321,6 @@ export default {
         var box = vm.$refs.chatBox;
         if (box) box.scrollTop = box.scrollHeight;
       }, 50);
-    },
-
-    handleRead(row) {
-      var id = row.id || row._id;
-      markReporterRead(id).then(function() {
-        this.$modal.msgSuccess('\u5df2\u6807\u8bb0\u4e3a\u5df2\u5904\u7406');
-        this.getList();
-      }.bind(this));
     },
 
     handleBatchRead() {
@@ -342,4 +347,119 @@ export default {
   },
 };
 </script>
-<style scoped>.mb8 { margin-bottom: 8px; }</style>
+
+<style scoped>
+.mb8 { margin-bottom: 8px; }
+
+/* 浮动按钮 */
+.chat-fab {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 2000;
+  cursor: pointer;
+}
+.fab-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #409eff;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  box-shadow: 0 2px 12px rgba(64,158,255,0.4);
+  transition: transform 0.2s;
+}
+.fab-avatar:hover { transform: scale(1.08); }
+
+/* 浮动面板 */
+.chat-panel {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  width: 420px;
+  height: 580px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 头部 */
+.chat-header {
+  background: #409eff;
+  color: #fff;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.chat-title { font-size: 14px; font-weight: 600; }
+.chat-header-actions { display: flex; gap: 4px; }
+
+/* 消息区 */
+.chat-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  background: #f5f6f7;
+}
+.chat-body::-webkit-scrollbar { width: 4px; }
+.chat-body::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+
+/* 时间分隔 */
+.chat-time-divider { text-align: center; font-size: 11px; color: #999; margin: 12px 0 10px; }
+.chat-time-divider span { background: #e8e8e8; padding: 2px 12px; border-radius: 8px; }
+
+/* 头像 */
+.chat-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; flex-shrink: 0;
+}
+.chat-avatar-admin { background: #409eff; color: #fff; }
+.chat-avatar-user { background: #e6a23c; color: #fff; }
+
+/* 气泡 */
+.chat-bubble {
+  padding: 8px 12px;
+  word-break: break-word;
+  white-space: pre-wrap;
+  line-height: 1.5;
+  font-size: 13px;
+}
+.chat-bubble-admin {
+  background: #409eff;
+  color: #fff;
+  border-radius: 12px 12px 4px 12px;
+  max-width: 80%;
+}
+.chat-bubble-user {
+  background: #fff;
+  color: #333;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px 12px 12px 4px;
+  max-width: 80%;
+}
+
+/* 元信息 */
+.chat-msg-meta { font-size: 11px; color: #999; margin-bottom: 2px; }
+.chat-msg-time { font-size: 10px; color: #bbb; margin-top: 2px; }
+.chat-extra { font-size: 11px; color: #999; margin-top: 3px; }
+
+/* 输入区 */
+.chat-footer {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-top: 1px solid #eee;
+  background: #fff;
+  flex-shrink: 0;
+}
+</style>
