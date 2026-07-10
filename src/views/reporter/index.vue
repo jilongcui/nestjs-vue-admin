@@ -26,6 +26,9 @@
     <!-- 操作按钮 -->
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
+        <el-button type="success" icon="el-icon-check" size="mini" :disabled="multiple" @click="handleBatchRead">批量已读</el-button>
+      </el-col>
+      <el-col :span="1.5">
         <el-button type="danger" icon="el-icon-delete" size="mini" :disabled="multiple" @click="handleDelete">删除</el-button>
       </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList" />
@@ -103,7 +106,7 @@
 </template>
 
 <script>
-import { listReporter, getReporter, markReporterRead, delReporter } from "@/api/reporter";
+import { listReporter, getReporter, markReporterRead, batchReadReporter, delReporter } from "@/api/reporter";
 
 export default {
   name: "Reporter",
@@ -112,65 +115,104 @@ export default {
       loading: false, total: 0, list: [],
       ids: [], multiple: true, showSearch: true,
       queryParams: { pageNum: 1, pageSize: 20, category: undefined, status: undefined, userId: undefined },
-      // 详情弹窗
       detailVisible: false, detailLoading: false,
       detail: {},
+      socket: null,
     };
   },
   computed: {
     detailTitle() {
-      if (!this.detail.id) return '详情';
-      const type = this.detail.category === 'teacher_apply' ? '老师申请' : '问题反馈';
-      return `${type}详情 #${this.detail.id}`;
+      if (!this.detail.id) return '\u8be6\u60c5';
+      var type = this.detail.category === 'teacher_apply' ? '\u8001\u5e08\u7533\u8bf7' : '\u95ee\u9898\u53cd\u9988';
+      return type + '\u8be6\u60c5 #' + this.detail.id;
     },
   },
-  created() { this.getList(); },
+  created() {
+    this.getList();
+    this.initSocket();
+  },
+  beforeDestroy() {
+    if (this.socket) this.socket.close();
+  },
   methods: {
     getList() {
       this.loading = true;
-      const params = { ...this.queryParams };
-      Object.keys(params).forEach(k => { if (!params[k] && params[k] !== 0) delete params[k]; });
-      listReporter(params).then(res => {
+      var params = { ...this.queryParams };
+      Object.keys(params).forEach(function(k) { if (!params[k] && params[k] !== 0) delete params[k]; });
+      listReporter(params).then(function(res) {
         if (res.code === 200) { this.list = res.data.rows || []; this.total = res.data.total || 0; }
         this.loading = false;
-      }).catch(() => { this.loading = false; });
+      }.bind(this)).catch(function() { this.loading = false; }.bind(this));
     },
     handleSelectionChange(selection) {
-      this.ids = selection.map(item => item.id);
+      this.ids = selection.map(function(item) { return item.id; });
       this.multiple = !selection.length;
     },
     handleQuery() { this.queryParams.pageNum = 1; this.getList(); },
     resetQuery() { this.resetForm("queryForm"); this.handleQuery(); },
 
+    initSocket() {
+      if (typeof io === 'undefined') return;
+      var token = localStorage.getItem('Admin-Token');
+      if (!token) return;
+      var vm = this;
+      this.socket = io(location.origin, {
+        path: '/socket.io',
+        auth: { token: token.replace('Bearer ', '') },
+      });
+      this.socket.on('connect', function() { console.log('admin WS connected'); });
+      this.socket.on('admin:new-reporter', function(data) {
+        vm.$notify({
+          title: data.category === 'teacher_apply' ? '\u65b0\u8001\u5e08\u7533\u8bf7' : '\u65b0\u95ee\u9898\u53cd\u9988',
+          message: data.description ? data.description.slice(0, 50) : '---',
+          type: data.category === 'teacher_apply' ? 'warning' : 'info',
+          duration: 5000,
+        });
+        vm.getList();
+      });
+    },
+
     handleView(row) {
       this.detailLoading = true;
       this.detailVisible = true;
-      getReporter(row.id).then(res => {
+      getReporter(row.id).then(function(res) {
         if (res.code === 200) {
           this.detail = res.data;
-          // 如果是未读，查看后就变为已读了，刷新列表
           if (row.status === '0') this.getList();
         }
         this.detailLoading = false;
-      }).catch(() => { this.detailLoading = false; });
+      }.bind(this)).catch(function() { this.detailLoading = false; }.bind(this));
     },
 
     handleRead(row) {
-      const id = row.id || row._id;
-      markReporterRead(id).then(() => {
-        this.$modal.msgSuccess('已标记为已处理');
+      var id = row.id || row._id;
+      markReporterRead(id).then(function() {
+        this.$modal.msgSuccess('\u5df2\u6807\u8bb0\u4e3a\u5df2\u5904\u7406');
         if (this.detailVisible && this.detail.id === id) {
           this.detail.status = '1';
         }
         this.getList();
-      });
+      }.bind(this));
+    },
+
+    handleBatchRead() {
+      if (!this.ids.length) return;
+      this.$modal.confirm('\u786e\u8ba4\u5c06\u9009\u4e2d\u7684 ' + this.ids.length + ' \u6761\u6807\u8bb0\u4e3a\u5df2\u5904\u7406\uff1f').then(function() {
+        batchReadReporter(this.ids).then(function() {
+          this.$modal.msgSuccess('\u5df2\u6279\u91cf\u6807\u8bb0\u4e3a\u5df2\u5904\u7406');
+          this.getList();
+        }.bind(this));
+      }.bind(this)).catch(function() {});
     },
 
     handleDelete(row) {
-      const ids = row.id ? [row.id] : this.ids;
-      this.$modal.confirm('是否确认删除？').then(() => delReporter(ids.join(",")))
-        .then(() => { this.getList(); this.$modal.msgSuccess("删除成功"); })
-        .catch(() => {});
+      var ids = row.id ? [row.id] : this.ids;
+      this.$modal.confirm('\u662f\u5426\u786e\u8ba4\u5220\u9664\uff1f').then(function() {
+        delReporter(ids.join(",")).then(function() {
+          this.getList();
+          this.$modal.msgSuccess('\u5220\u9664\u6210\u529f');
+        }.bind(this));
+      }.bind(this)).catch(function() {});
     },
   },
 };

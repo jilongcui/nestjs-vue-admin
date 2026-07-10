@@ -20,6 +20,11 @@ export function updateReporter(id, data) {
   return request({ url: '/sys/reporter/' + id, method: 'patch', data })
 }
 
+// 批量标记已处理
+export function batchReadReporter(ids) {
+  return request({ url: '/sys/reporter/batch/read', method: 'put', data: { ids } })
+}
+
 // 删除反馈
 export function delReporter(id) {
   return request({ url: '/sys/reporter/' + id, method: 'delete' })
