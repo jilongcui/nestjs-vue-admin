@@ -29,3 +29,13 @@ export function batchReadReporter(ids) {
 export function delReporter(id) {
   return request({ url: '/sys/reporter/' + id, method: 'delete' })
 }
+
+// ===== 会话消息 =====
+
+export function getReporterMessages(reporterId) {
+  return request({ url: '/sys/reporter/' + reporterId + '/messages', method: 'get' })
+}
+
+export function sendReporterMessage(reporterId, content) {
+  return request({ url: '/sys/reporter/' + reporterId + '/messages', method: 'post', data: { content } })
+}

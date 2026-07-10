@@ -57,9 +57,10 @@
       <el-table-column label="提交时间" width="160">
         <template slot-scope="scope">{{ parseTime(scope.row.createTime) }}</template>
       </el-table-column>
-      <el-table-column label="操作" width="160" align="center" fixed="right">
+      <el-table-column label="操作" width="220" align="center" fixed="right">
         <template slot-scope="scope">
           <el-button size="mini" type="text" icon="el-icon-view" @click="handleView(scope.row)">查看</el-button>
+          <el-button size="mini" type="text" icon="el-icon-chat-dot-square" @click="handleChat(scope.row)">会话</el-button>
           <el-button size="mini" type="text" icon="el-icon-check" v-if="scope.row.status === '0'" @click="handleRead(scope.row)">标为已处理</el-button>
           <el-button size="mini" type="text" icon="el-icon-delete" style="color:#f56c6c" @click="handleDelete(scope.row)">删除</el-button>
         </template>
@@ -102,11 +103,42 @@
         <el-button @click="detailVisible = false">关闭</el-button>
       </div>
     </el-dialog>
+
+    <!-- 会话弹窗 -->
+    <el-dialog :title="chatTitle" :visible.sync="chatVisible" width="500px" append-to-body top="5vh" @close="chatVisible = false">
+      <div style="height:400px; overflow-y:auto; border:1px solid #eee; border-radius:4px; padding:12px; background:#f9f9f9;" ref="chatBox">
+        <div v-if="chatLoading" style="text-align:center; color:#999; padding:40px 0;">加载中...</div>
+        <div v-else-if="chatMessages.length === 0" style="text-align:center; color:#999; padding:40px 0;">暂无消息，发送第一条回复</div>
+        <div v-for="(msg, i) in chatMessages" :key="i" style="margin-bottom:12px;">
+          <div v-if="msg.senderRole === 'admin'" style="display:flex; flex-direction:column; align-items:flex-end;">
+            <div style="font-size:11px; color:#999; margin-bottom:2px;">
+              管理员{{ msg.senderName ? ' (' + msg.senderName + ')' : '' }} {{ parseTime(msg.createTime) }}
+            </div>
+            <div style="background:#409eff; color:#fff; padding:8px 14px; border-radius:12px 12px 2px 12px; max-width:80%; word-break:break-word;">
+              {{ msg.content }}
+            </div>
+          </div>
+          <div v-else style="display:flex; flex-direction:column; align-items:flex-start;">
+            <div style="font-size:11px; color:#999; margin-bottom:2px;">
+              用户 ({{ msg.senderId }}) {{ parseTime(msg.createTime) }}
+            </div>
+            <div style="background:#fff; color:#333; padding:8px 14px; border-radius:12px 12px 12px 2px; max-width:80%; word-break:break-word; border:1px solid #e0e0e0;">
+              {{ msg.content }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:12px;">
+        <el-input v-model="chatInput" type="textarea" :rows="2" placeholder="输入回复内容..." @keyup.enter.native="sendChatMessage" style="flex:1;" />
+        <el-button type="primary" @click="sendChatMessage" style="height:52px; width:80px;">发送</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { listReporter, getReporter, markReporterRead, batchReadReporter, delReporter } from "@/api/reporter";
+import { listReporter, getReporter, markReporterRead, batchReadReporter, delReporter, getReporterMessages, sendReporterMessage } from "@/api/reporter";
+import io from "socket.io-client";
 
 export default {
   name: "Reporter",
@@ -117,6 +149,13 @@ export default {
       queryParams: { pageNum: 1, pageSize: 20, category: undefined, status: undefined, userId: undefined },
       detailVisible: false, detailLoading: false,
       detail: {},
+      // 会话
+      chatVisible: false,
+      chatLoading: false,
+      chatMessages: [],
+      chatInput: '',
+      chatReporterId: null,
+      chatCategory: '',
       socket: null,
     };
   },
@@ -125,6 +164,11 @@ export default {
       if (!this.detail.id) return '\u8be6\u60c5';
       var type = this.detail.category === 'teacher_apply' ? '\u8001\u5e08\u7533\u8bf7' : '\u95ee\u9898\u53cd\u9988';
       return type + '\u8be6\u60c5 #' + this.detail.id;
+    },
+    chatTitle() {
+      if (!this.chatReporterId) return '\u4f1a\u8bdd';
+      var type = this.chatCategory === 'teacher_apply' ? '\u8001\u5e08\u7533\u8bf7' : '\u95ee\u9898\u53cd\u9988';
+      return type + ' \u4f1a\u8bdd #' + this.chatReporterId;
     },
   },
   created() {
@@ -152,7 +196,6 @@ export default {
     resetQuery() { this.resetForm("queryForm"); this.handleQuery(); },
 
     initSocket() {
-      if (typeof io === 'undefined') return;
       var token = localStorage.getItem('Admin-Token');
       if (!token) return;
       var vm = this;
@@ -169,6 +212,12 @@ export default {
           duration: 5000,
         });
         vm.getList();
+      });
+      this.socket.on('admin:reporter-message', function(data) {
+        if (vm.chatVisible && data.reporterId === vm.chatReporterId) {
+          vm.chatMessages.push(data);
+          vm.$nextTick(function() { vm.scrollChat(); });
+        }
       });
     },
 
@@ -213,6 +262,45 @@ export default {
           this.$modal.msgSuccess('\u5220\u9664\u6210\u529f');
         }.bind(this));
       }.bind(this)).catch(function() {});
+    },
+
+    // ===== 会话 =====
+
+    handleChat(row) {
+      this.chatReporterId = row.id;
+      this.chatCategory = row.category || 'feedback';
+      this.chatVisible = true;
+      this.chatMessages = [];
+      this.loadChatMessages();
+    },
+
+    loadChatMessages() {
+      this.chatLoading = true;
+      getReporterMessages(this.chatReporterId).then(function(res) {
+        if (res.code === 200) {
+          this.chatMessages = res.data || [];
+          this.$nextTick(function() { this.scrollChat(); }.bind(this));
+        }
+        this.chatLoading = false;
+      }.bind(this)).catch(function() { this.chatLoading = false; }.bind(this));
+    },
+
+    sendChatMessage() {
+      var content = this.chatInput.trim();
+      if (!content) return;
+      this.chatInput = '';
+      var vm = this;
+      sendReporterMessage(this.chatReporterId, content).then(function(res) {
+        if (res.code === 200) {
+          vm.chatMessages.push(res.data);
+          vm.$nextTick(function() { vm.scrollChat(); });
+        }
+      });
+    },
+
+    scrollChat() {
+      var box = this.$refs.chatBox;
+      if (box) box.scrollTop = box.scrollHeight;
     },
   },
 };
