@@ -32,20 +32,18 @@ module.exports = {
     proxy: {
       // detail: https://cli.vuejs.org/config/#devserver-proxy
       [process.env.VUE_APP_BASE_API + "/upload"]: {
-        // target: `http://localhost:3000`,
-        target: `http://47.102.218.158:3000/upload`,
+        target: `http://127.0.0.1:6001`,
         changeOrigin: true,
         pathRewrite: {
-          ["^" + process.env.VUE_APP_BASE_API + "/upload"]: "",
+          ["^" + process.env.VUE_APP_BASE_API + "/upload"]: "/upload",
         },
       },
       // detail: https://cli.vuejs.org/config/#devserver-proxy
       [process.env.VUE_APP_BASE_API]: {
-        // target: `http://localhost:3000`,
-        target: `http://47.102.218.158:3000/api`,
+        target: `http://127.0.0.1:6001`,
         changeOrigin: true,
         pathRewrite: {
-          ["^" + process.env.VUE_APP_BASE_API]: "",
+          ["^" + process.env.VUE_APP_BASE_API]: "/api/v2",
         },
       },
     },
@@ -64,6 +62,9 @@ module.exports = {
       alias: {
         "@": resolve("src"),
       },
+    },
+    output: {
+      hashFunction: "sha256",
     },
     plugins: [
       new CompressionPlugin({
