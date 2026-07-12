@@ -241,7 +241,7 @@ export default {
       var token = localStorage.getItem('Admin-Token');
       if (!token) return;
       var vm = this;
-      this.socket = io(location.origin, {
+      this.socket = io(location.origin + '/admin', {
         path: '/socket.io',
         auth: { token: token.replace('Bearer ', '') },
       });
