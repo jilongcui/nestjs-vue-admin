@@ -22,6 +22,12 @@
                 :value="dict.value" />
             </el-select>
           </el-form-item>
+          <el-form-item label="类型" prop="userType">
+            <el-select v-model="queryParams.userType" placeholder="用户类型" clearable style="width: 130px">
+              <el-option label="学生" value="01" />
+              <el-option label="老师" value="02" />
+            </el-select>
+          </el-form-item>
           <el-form-item>
             <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
             <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
@@ -114,6 +120,7 @@ export default {
         userId: undefined,
         phonenumber: undefined,
         status: undefined,
+        userType: undefined,
       },
       columns: [
         { key: 0, label: `用户编号`, visible: true },
