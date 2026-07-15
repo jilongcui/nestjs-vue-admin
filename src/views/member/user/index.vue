@@ -75,15 +75,40 @@
     </el-row>
 
     <!-- 编辑弹窗 -->
-    <el-dialog :title="editTitle" :visible.sync="editVisible" width="500px" append-to-body>
+    <el-dialog :title="editTitle" :visible.sync="editVisible" width="520px" append-to-body>
       <el-form ref="editForm" :model="editForm" label-width="80px" size="small">
         <el-form-item label="用户编号"><el-input :value="editForm.userId" disabled /></el-form-item>
         <el-form-item label="用户名称"><el-input :value="editForm.userName" disabled /></el-form-item>
+        <el-form-item label="手机号码">
+          <el-input :value="editForm.phonenumber" disabled />
+        </el-form-item>
         <el-form-item label="用户昵称" prop="nickName">
           <el-input v-model="editForm.nickName" placeholder="请输入昵称" />
         </el-form-item>
-        <el-form-item label="手机号码" prop="phonenumber">
-          <el-input v-model="editForm.phonenumber" placeholder="请输入手机号码" />
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="类型" prop="userType">
+              <el-select v-model="editForm.userType" style="width:100%">
+                <el-option label="学生" value="01" />
+                <el-option label="老师" value="02" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="性别" prop="sex">
+              <el-select v-model="editForm.sex" style="width:100%">
+                <el-option label="男" value="1" />
+                <el-option label="女" value="2" />
+                <el-option label="未知" value="0" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="editForm.email" placeholder="请输入邮箱" />
+        </el-form-item>
+        <el-form-item label="头像" prop="avatar">
+          <el-input v-model="editForm.avatar" placeholder="头像图片URL" />
         </el-form-item>
       </el-form>
       <div slot="footer">
@@ -112,7 +137,7 @@ export default {
       // 编辑
       editVisible: false,
       editUserId: null,
-      editForm: { userId: '', userName: '', nickName: '', phonenumber: '' },
+      editForm: { userId: '', userName: '', nickName: '', phonenumber: '', userType: '01', sex: '1', email: '', avatar: '' },
       queryParams: {
         pageNum: 1,
         pageSize: 10,
@@ -166,6 +191,10 @@ export default {
         userName: row.userName,
         nickName: row.nickName || '',
         phonenumber: row.phonenumber || '',
+        userType: row.userType || '01',
+        sex: row.sex || '1',
+        email: row.email || '',
+        avatar: row.avatar || '',
       };
       this.editVisible = true;
     },
@@ -173,7 +202,10 @@ export default {
       var vm = this;
       updateMemberUser(this.editUserId, {
         nickName: this.editForm.nickName,
-        phonenumber: this.editForm.phonenumber,
+        userType: this.editForm.userType,
+        sex: this.editForm.sex,
+        email: this.editForm.email,
+        avatar: this.editForm.avatar,
       }).then(function() {
         vm.$modal.msgSuccess('\u4fdd\u5b58\u6210\u529f');
         vm.editVisible = false;
