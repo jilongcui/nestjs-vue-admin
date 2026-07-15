@@ -1,7 +1,6 @@
 <template>
   <div class="app-container">
     <el-row :gutter="20">
-      <!--会员用户数据-->
       <el-col :span="24" :xs="24">
         <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch"
           label-width="68px">
@@ -56,8 +55,9 @@
               <span>{{ parseTime(scope.row.createTime) }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="操作" align="center" width="120" class-name="small-padding fixed-width">
+          <el-table-column label="操作" align="center" width="160" class-name="small-padding fixed-width">
             <template slot-scope="scope">
+              <el-button size="mini" type="text" icon="el-icon-edit" @click="handleEdit(scope.row)">编辑</el-button>
               <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)">删除</el-button>
             </template>
           </el-table-column>
@@ -67,11 +67,29 @@
           :limit.sync="queryParams.pageSize" @pagination="getList" />
       </el-col>
     </el-row>
+
+    <!-- 编辑弹窗 -->
+    <el-dialog :title="editTitle" :visible.sync="editVisible" width="500px" append-to-body>
+      <el-form ref="editForm" :model="editForm" label-width="80px" size="small">
+        <el-form-item label="用户编号"><el-input :value="editForm.userId" disabled /></el-form-item>
+        <el-form-item label="用户名称"><el-input :value="editForm.userName" disabled /></el-form-item>
+        <el-form-item label="用户昵称" prop="nickName">
+          <el-input v-model="editForm.nickName" placeholder="请输入昵称" />
+        </el-form-item>
+        <el-form-item label="手机号码" prop="phonenumber">
+          <el-input v-model="editForm.phonenumber" placeholder="请输入手机号码" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer">
+        <el-button @click="editVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitEdit">确定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { listMemberUser, delMemberUser, changeMemberUserStatus } from "@/api/member/user";
+import { listMemberUser, delMemberUser, changeMemberUserStatus, updateMemberUser } from "@/api/member/user";
 
 export default {
   name: "MemberUser",
@@ -80,14 +98,15 @@ export default {
     return {
       loading: true,
       ids: [],
-      single: true,
       multiple: true,
       showSearch: true,
       total: 0,
       userList: null,
-      title: "",
-      open: false,
       dateRange: [],
+      // 编辑
+      editVisible: false,
+      editUserId: null,
+      editForm: { userId: '', userName: '', nickName: '', phonenumber: '' },
       queryParams: {
         pageNum: 1,
         pageSize: 10,
@@ -105,6 +124,11 @@ export default {
         { key: 5, label: `创建时间`, visible: true }
       ],
     };
+  },
+  computed: {
+    editTitle() {
+      return '\u7f16\u8f91\u4f1a\u5458 - ' + (this.editForm.userName || '');
+    }
   },
   created() {
     this.getList();
@@ -128,6 +152,27 @@ export default {
         row.status = row.status === "0" ? "1" : "0";
       });
     },
+    handleEdit(row) {
+      this.editUserId = row.userId;
+      this.editForm = {
+        userId: row.userId,
+        userName: row.userName,
+        nickName: row.nickName || '',
+        phonenumber: row.phonenumber || '',
+      };
+      this.editVisible = true;
+    },
+    submitEdit() {
+      var vm = this;
+      updateMemberUser(this.editUserId, {
+        nickName: this.editForm.nickName,
+        phonenumber: this.editForm.phonenumber,
+      }).then(function() {
+        vm.$modal.msgSuccess('\u4fdd\u5b58\u6210\u529f');
+        vm.editVisible = false;
+        vm.getList();
+      });
+    },
     handleQuery() {
       this.queryParams.pageNum = 1;
       this.getList();
@@ -139,7 +184,6 @@ export default {
     },
     handleSelectionChange(selection) {
       this.ids = selection.map(item => item.userId);
-      this.single = selection.length != 1;
       this.multiple = !selection.length;
     },
     handleDelete(row) {

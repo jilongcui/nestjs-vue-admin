@@ -37,3 +37,12 @@ export function changeMemberUserStatus(userId, status) {
     data: data
   })
 }
+
+// 编辑会员用户信息
+export function updateMemberUser(userId, data) {
+  return request({
+    url: '/user',
+    method: 'put',
+    data: { ...data, userId }
+  })
+}
