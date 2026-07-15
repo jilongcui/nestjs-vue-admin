@@ -44,7 +44,7 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="用户ID" prop="userId" width="160" show-overflow-tooltip />
+      <el-table-column label="用户ID" prop="userId" min-width="180" show-overflow-tooltip />
       <el-table-column label="描述" prop="description" min-width="200" show-overflow-tooltip />
       <el-table-column label="联系方式" prop="contact" width="120" />
       <el-table-column label="状态" width="70" align="center">
@@ -140,6 +140,7 @@
 <script>
 import { listReporter, getReporter, markReporterRead, batchReadReporter, delReporter, getReporterMessages, sendReporterMessage } from "@/api/reporter";
 import io from "socket.io-client";
+import { getToken } from "@/utils/auth";
 
 function parseTimeStr(t) {
   if (!t) return 0;
@@ -238,15 +239,30 @@ export default {
     resetQuery() { this.resetForm("queryForm"); this.handleQuery(); },
 
     initSocket() {
-      var token = localStorage.getItem('Admin-Token');
-      if (!token) return;
+      var token = getToken();
+      console.log('[Reporter] initSocket START, token exists:', !!token);
+      if (!token) {
+        console.warn('[Reporter] initSocket ABORT — no Admin-Token in cookies');
+        return;
+      }
       var vm = this;
-      this.socket = io(location.origin + '/admin', {
+      var url = location.origin + '/admin';
+      console.log('[Reporter] connecting to:', url, 'path: /socket.io, token prefix:', token.slice(0, 20) + '...');
+      this.socket = io(url, {
         path: '/socket.io',
-        auth: { token: token.replace('Bearer ', '') },
+        auth: { token: token },
       });
-      this.socket.on('connect', function() { console.log('admin WS connected'); });
+      this.socket.on('connect', function() {
+        console.log('[Reporter] ✅ WS CONNECTED, socket.id:', vm.socket.id);
+      });
+      this.socket.on('connect_error', function(err) {
+        console.error('[Reporter] ❌ WS CONNECT_ERROR:', err.message, err);
+      });
+      this.socket.on('disconnect', function(reason) {
+        console.warn('[Reporter] ⚠️ WS DISCONNECTED, reason:', reason);
+      });
       this.socket.on('admin:new-reporter', function(data) {
+        console.log('[Reporter] EVENT admin:new-reporter:', JSON.stringify(data));
         vm.$notify({
           title: data.category === 'teacher_apply' ? '\u65b0\u8001\u5e08\u7533\u8bf7' : '\u65b0\u95ee\u9898\u53cd\u9988',
           message: data.description ? data.description.slice(0, 50) : '---',
@@ -256,18 +272,24 @@ export default {
         vm.getList();
       });
       this.socket.on('admin:reporter-message', function(data) {
+        console.log('[Reporter] EVENT admin:reporter-message | chatReporterId=' + vm.chatReporterId + ' data.reporterId=' + data.reporterId + ' match=' + (data.reporterId === vm.chatReporterId) + ' | full:', JSON.stringify(data));
         if (data.reporterId === vm.chatReporterId) {
           if (vm.chatExpanded) {
+            console.log('[Reporter] appending to chatMessages (expanded), count before:', vm.chatMessages.length);
             vm.chatMessages.push(data);
             vm.$nextTick(function() { vm.scrollChat(); });
           } else {
             vm.chatUnread++;
+            console.log('[Reporter] chat minimized, unread:', vm.chatUnread);
           }
+        } else {
+          console.log('[Reporter] different reporter, ignoring. current=' + vm.chatReporterId + ' received=' + data.reporterId);
         }
       });
     },
 
     handleView(row) {
+      console.log('[Reporter] handleView row.id=' + row.id + ' category=' + row.category + ' status=' + row.status);
       var vm = this;
       this.chatReporterId = row.id;
       this.chatCategory = row.category || 'feedback';
@@ -307,11 +329,15 @@ export default {
       if (!content) return;
       this.chatInput = '';
       var vm = this;
+      console.log('[Reporter] sendChatMessage reporterId=' + this.chatReporterId + ' contentLen=' + content.length);
       sendReporterMessage(this.chatReporterId, content).then(function(res) {
+        console.log('[Reporter] sendChatMessage response code=' + res.code + ' data:', JSON.stringify(res.data));
         if (res.code === 200) {
           vm.chatMessages.push(res.data);
           vm.$nextTick(function() { vm.scrollChat(); });
         }
+      }).catch(function(err) {
+        console.error('[Reporter] sendChatMessage ERROR:', err);
       });
     },
 

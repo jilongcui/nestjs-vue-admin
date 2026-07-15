@@ -6,7 +6,11 @@
         <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch"
           label-width="68px">
           <el-form-item label="用户名称" prop="userName">
-            <el-input v-model="queryParams.userName" placeholder="请输入用户名称" clearable style="width: 240px"
+            <el-input v-model="queryParams.userName" placeholder="请输入用户名称" clearable style="width: 200px"
+              @keyup.enter.native="handleQuery" />
+          </el-form-item>
+          <el-form-item label="用户ID" prop="userId">
+            <el-input v-model="queryParams.userId" placeholder="请输入用户ID" clearable style="width: 200px"
               @keyup.enter.native="handleQuery" />
           </el-form-item>
           <el-form-item label="手机号码" prop="phonenumber">
@@ -88,6 +92,7 @@ export default {
         pageNum: 1,
         pageSize: 10,
         userName: undefined,
+        userId: undefined,
         phonenumber: undefined,
         status: undefined,
       },
