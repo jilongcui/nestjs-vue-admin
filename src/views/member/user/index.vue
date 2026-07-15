@@ -138,6 +138,7 @@ export default {
       editVisible: false,
       editUserId: null,
       editForm: { userId: '', userName: '', nickName: '', phonenumber: '', userType: '01', sex: '1', email: '', avatar: '' },
+      editOriginal: {},
       queryParams: {
         pageNum: 1,
         pageSize: 10,
@@ -186,7 +187,7 @@ export default {
     },
     handleEdit(row) {
       this.editUserId = row.userId;
-      this.editForm = {
+      var form = {
         userId: row.userId,
         userName: row.userName,
         nickName: row.nickName || '',
@@ -196,17 +197,26 @@ export default {
         email: row.email || '',
         avatar: row.avatar || '',
       };
+      this.editForm = { ...form };
+      this.editOriginal = { ...form };
       this.editVisible = true;
     },
     submitEdit() {
       var vm = this;
-      updateMemberUser(this.editUserId, {
-        nickName: this.editForm.nickName,
-        userType: this.editForm.userType,
-        sex: this.editForm.sex,
-        email: this.editForm.email,
-        avatar: this.editForm.avatar,
-      }).then(function() {
+      var data = {};
+      var fields = ['nickName', 'userType', 'sex', 'email', 'avatar'];
+      for (var i = 0; i < fields.length; i++) {
+        var key = fields[i];
+        if (this.editForm[key] !== this.editOriginal[key]) {
+          data[key] = this.editForm[key];
+        }
+      }
+      if (Object.keys(data).length === 0) {
+        vm.$modal.msgSuccess('\u65e0\u4fee\u6539');
+        vm.editVisible = false;
+        return;
+      }
+      updateMemberUser(this.editUserId, data).then(function() {
         vm.$modal.msgSuccess('\u4fdd\u5b58\u6210\u529f');
         vm.editVisible = false;
         vm.getList();
