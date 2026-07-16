@@ -50,13 +50,20 @@
             :show-overflow-tooltip="true" />
           <el-table-column label="手机号码" align="center" key="phonenumber" prop="phonenumber" v-if="columns[3].visible"
             width="120" />
-          <el-table-column label="状态" align="center" key="status" v-if="columns[4].visible">
+          <el-table-column label="类型" align="center" key="userType" v-if="columns[4].visible" width="80">
+            <template slot-scope="scope">
+              <el-tag :type="scope.row.userType === '02' ? 'warning' : 'info'" size="mini">
+                {{ scope.row.userType === '02' ? '老师' : '学生' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="状态" align="center" key="status" v-if="columns[5].visible">
             <template slot-scope="scope">
               <el-switch v-model="scope.row.status" active-value="0" inactive-value="1"
                 @change="handleStatusChange(scope.row)"></el-switch>
             </template>
           </el-table-column>
-          <el-table-column label="创建时间" align="center" prop="createTime" v-if="columns[5].visible" width="160">
+          <el-table-column label="创建时间" align="center" prop="createTime" v-if="columns[6].visible" width="160">
             <template slot-scope="scope">
               <span>{{ parseTime(scope.row.createTime) }}</span>
             </template>
@@ -153,8 +160,9 @@ export default {
         { key: 1, label: `用户名称`, visible: true },
         { key: 2, label: `用户昵称`, visible: true },
         { key: 3, label: `手机号码`, visible: true },
-        { key: 4, label: `状态`, visible: true },
-        { key: 5, label: `创建时间`, visible: true }
+        { key: 4, label: `类型`, visible: true },
+        { key: 5, label: `状态`, visible: true },
+        { key: 6, label: `创建时间`, visible: true }
       ],
     };
   },
