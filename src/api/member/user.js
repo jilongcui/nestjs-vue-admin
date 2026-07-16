@@ -41,7 +41,7 @@ export function changeMemberUserStatus(userId, status) {
 // 编辑会员用户信息
 export function updateMemberUser(userId, data) {
   return request({
-    url: '/user',
+    url: '/user/updateMember',
     method: 'put',
     data: { ...data, userId }
   })
