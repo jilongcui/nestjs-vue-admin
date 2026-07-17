@@ -120,9 +120,6 @@
             </div>
           </div>
         </el-form-item>
-        <el-form-item label="Apple IAP" prop="iAPItem" v-if="dialog.id">
-          <el-input v-model="form.iAPItem" placeholder="商品ID" />
-        </el-form-item>
       </el-form>
       <div slot="footer">
         <el-button @click="cancel">取消</el-button>
@@ -175,7 +172,7 @@ export default {
     },
     handleQuery() { this.queryParams.pageNum = 1; this.getList(); },
     resetQuery() { this.resetForm("queryForm"); this.handleQuery(); },
-    reset() { this.form = { title: "", subtitle: "", teacherId: "", teacherName: "", teacherAvatar: "", price: 0, field: "", status: "active" }; },
+    reset() { this.form = { title: "", subtitle: "", teacherId: "", teacherName: "", teacherAvatar: "", price: 0, field: "", status: "active", rating: 5 }; },
     cancel() { this.dialog.visible = false; this.resetForm("form"); },
     handleAdd() { this.reset(); this.dialog.id = null; this.dialog.title = "新增课程"; this.dialog.visible = true; },
     handleEdit(row) {
