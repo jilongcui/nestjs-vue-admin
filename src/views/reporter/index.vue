@@ -44,7 +44,11 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="用户ID" prop="userId" min-width="180" show-overflow-tooltip />
+      <el-table-column label="用户ID" width="140" show-overflow-tooltip>
+        <template slot-scope="scope">
+          <span>{{ truncateUserId(scope.row.userId) }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="描述" prop="description" min-width="200" show-overflow-tooltip />
       <el-table-column label="联系方式" prop="contact" width="120" />
       <el-table-column label="状态" width="70" align="center">
@@ -54,7 +58,7 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="提交时间" width="150">
+      <el-table-column label="提交时间" width="170">
         <template slot-scope="scope">{{ parseTime(scope.row.createTime) }}</template>
       </el-table-column>
       <el-table-column label="操作" width="120" align="center" fixed="right">
@@ -237,6 +241,12 @@ export default {
     },
     handleQuery() { this.queryParams.pageNum = 1; this.getList(); },
     resetQuery() { this.resetForm("queryForm"); this.handleQuery(); },
+    truncateUserId(userId) {
+      if (!userId) return '';
+      var s = String(userId);
+      if (s.length <= 25) return s;
+      return s.slice(0, 12) + '...' + s.slice(-10);
+    },
 
     initSocket() {
       var token = getToken();
